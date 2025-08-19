@@ -1,34 +1,30 @@
 # server/services/brokerConnector.py
-import os
-import time
-import logging
+import os, time, logging
 from dotenv import load_dotenv
 
-# MetaTrader5 import is lazy so the module can be imported even if MT5 isn't installed during static analysis
+load_dotenv()
+LOG = logging.getLogger("brokerConnector")
+LOG.setLevel(logging.INFO)
+
 try:
     import MetaTrader5 as mt5
 except Exception as e:
     mt5 = None
-
-load_dotenv()
-
-LOG = logging.getLogger("brokerConnector")
-LOG.setLevel(logging.INFO)
+    LOG.warning("MetaTrader5 import failed: %s", e)
 
 MT5_LOGIN = int(os.getenv("MT5_LOGIN", "0"))
 MT5_PASSWORD = os.getenv("MT5_PASSWORD", "")
 MT5_SERVER = os.getenv("MT5_SERVER", "")
 
 def connect_mt5(retries=3, wait=2):
-    """Initialize MT5 connection (returns True on success)."""
     if mt5 is None:
-        raise RuntimeError("MetaTrader5 package not installed. pip install MetaTrader5")
+        raise RuntimeError("MetaTrader5 not available in environment. Install and run on Windows.")
     for i in range(retries):
         ok = mt5.initialize(login=MT5_LOGIN, password=MT5_PASSWORD, server=MT5_SERVER)
         if ok:
             LOG.info("MT5 initialized")
             return True
-        LOG.warning("MT5 initialize attempt %s failed: %s", i+1, mt5.last_error())
+        LOG.warning("MT5 init attempt %s failed: %s", i+1, mt5.last_error())
         time.sleep(wait)
     raise RuntimeError("MT5 initialize failed after retries: " + str(mt5.last_error()))
 
@@ -38,7 +34,6 @@ def disconnect_mt5():
         LOG.info("MT5 shutdown")
 
 def ensure_symbol(symbol):
-    """Make sure symbol is known and visible to MT5."""
     info = mt5.symbol_info(symbol)
     if info is None:
         return False
@@ -49,24 +44,21 @@ def ensure_symbol(symbol):
 def get_tick(symbol):
     return mt5.symbol_info_tick(symbol)
 
-def spread_in_pips(symbol):
-    """Return current spread in pips (float)."""
-    tick = get_tick(symbol)
-    if not tick:
-        return float("inf")
-    info = mt5.symbol_info(symbol)
-    if not info:
-        return float("inf")
-    point = info.point
-    spread_pips = (tick.ask - tick.bid) / point
-    return spread_pips
+def get_account_balance():
+    ai = mt5.account_info()
+    return float(ai.balance) if ai else 0.0
 
-def place_order_mt5(symbol, direction, volume, sl_pips, tp_pips, deviation=10, magic=123456):
+def spread_in_pips(symbol):
+    tick = get_tick(symbol)
+    info = mt5.symbol_info(symbol)
+    if not tick or not info:
+        return float("inf")
+    return (tick.ask - tick.bid) / info.point
+
+def place_order_mt5(symbol, direction, lots, sl_pips, tp_pips, deviation=20, magic=123456):
     """
-    Place a market order safely. Returns a dict describing result.
-    direction: "buy" or "sell"
-    volume: lots (float)
-    sl_pips/tp_pips: pip distances
+    Place market order safely. Returns dict with 'ok' bool and details.
+    direction = "buy" or "sell"
     """
     if not ensure_symbol(symbol):
         return {"ok": False, "error": "symbol not available"}
@@ -78,6 +70,7 @@ def place_order_mt5(symbol, direction, volume, sl_pips, tp_pips, deviation=10, m
     info = mt5.symbol_info(symbol)
     if info is None:
         return {"ok": False, "error": "symbol_info missing"}
+
     point = info.point
     digits = info.digits
 
@@ -85,30 +78,28 @@ def place_order_mt5(symbol, direction, volume, sl_pips, tp_pips, deviation=10, m
     sl = price - sl_pips * point if direction == "buy" else price + sl_pips * point
     tp = price + tp_pips * point if direction == "buy" else price - tp_pips * point
 
-    # Build request
     request = {
         "action": mt5.TRADE_ACTION_DEAL,
         "symbol": symbol,
-        "volume": max(0.01, float("{:.2f}".format(volume))),  # keep safe rounding
+        "volume": max(float("{:.2f}".format(lots)), 0.01),
         "type": mt5.ORDER_TYPE_BUY if direction == "buy" else mt5.ORDER_TYPE_SELL,
         "price": price,
         "sl": float("{:.{}f}".format(sl, digits)),
         "tp": float("{:.{}f}".format(tp, digits)),
         "deviation": deviation,
         "magic": magic,
-        "comment": "AutoBot",
+        "comment": "ForexFlipper-Auto",
         "type_time": mt5.ORDER_TIME_GTC,
         "type_filling": mt5.ORDER_FILLING_IOC,
     }
 
-    # Send and handle response
     result = mt5.order_send(request)
     if result is None:
+        LOG.error("order_send returned None: %s", mt5.last_error())
         return {"ok": False, "error": "order_send returned None", "last_error": mt5.last_error()}
     result_dict = result._asdict()
     if result_dict.get("retcode") != mt5.TRADE_RETCODE_DONE:
         LOG.error("Order failed: %s", result_dict)
-        return {"ok": False, "error": "order failed", "result": result_dict, "last_error": mt5.last_error()}
+        return {"ok": False, "error": "order failed", "result": result_dict}
     LOG.info("Order placed: %s", result_dict)
     return {"ok": True, "result": result_dict}
-
