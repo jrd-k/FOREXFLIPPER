@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Forex Scaling Bot - Professional Trading Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'inter': ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        'dark-bg': '#0f172a',
+                        'panel-bg': '#1e293b',
+                        'border-dark': '#334155',
+                        'profit': '#10b981', 
+                        'loss': '#ef4444',
+                        'warning': '#f59e0b',
+                        'primary': '#6366f1',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-dark-bg text-slate-100 font-inter min-h-screen" data-theme="dark">
+    <!-- @COMPONENT: MainDashboard -->
+    <div class="min-h-screen bg-dark-bg transition-colors duration-300">
+        
+        <!-- @COMPONENT: TopNavigation -->
+        <nav class="bg-gradient-to-r from-primary to-indigo-600 px-6 py-4 shadow-lg">
+            <div class="max-w-7xl mx-auto flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <div class="flex items-center space-x-3">
+                        <i class="fas fa-chart-line text-2xl"></i>
+                        <h1 class="text-xl font-bold">Forex Scaling Bot</h1>
+                    </div>
+                    <div class="hidden md:flex items-center space-x-2 bg-black/20 px-3 py-1 rounded-full text-sm">
+                        <div class="w-2 h-2 bg-profit rounded-full animate-pulse"></div>
+                        <span data-bind="system.status">System Active</span>
+                    </div>
+                </div>
+                
+                <div class="flex items-center space-x-3">
+                    <button class="bg-profit hover:bg-green-600 px-4 py-2 rounded-lg font-medium transition-colors flex items-center space-x-2" data-event="click:addAccount">
+                        <i class="fas fa-plus-circle"></i>
+                        <span>Add Account</span>
+                    </button>
+                    <button class="bg-warning hover:bg-orange-600 px-4 py-2 rounded-lg font-medium transition-colors flex items-center space-x-2" data-event="click:emergencyStop">
+                        <i class="fas fa-stop-circle"></i>
+                        <span class="hidden sm:inline">Emergency Stop</span>
+                    </button>
+                    <button class="bg-panel-bg hover:bg-slate-600 p-2 rounded-lg transition-colors" data-event="click:toggleTheme">
+                        <i class="fas fa-moon"></i>
+                    </button>
+                </div>
+            </div>
+        </nav>
+        <!-- @END_COMPONENT: TopNavigation -->
+
+        <div class="max-w-7xl mx-auto px-6 py-6 space-y-6">
+            
+            <!-- @COMPONENT: SystemOverview -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="bg-panel-bg rounded-xl p-4 border border-border-dark hover:shadow-lg transition-shadow">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-12 h-12 bg-primary/20 rounded-full flex items-center justify-center">
+                            <i class="fas fa-users text-primary text-lg"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm text-slate-400">Active Accounts</p>
+                            <p class="text-2xl font-bold" data-bind="accounts.active">3</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-panel-bg rounded-xl p-4 border border-border-dark hover:shadow-lg transition-shadow">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-12 h-12 bg-profit/20 rounded-full flex items-center justify-center">
+                            <i class="fas fa-exchange-alt text-profit text-lg"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm text-slate-400">Today's Trades</p>
+                            <p class="text-2xl font-bold" data-bind="trades.today">47</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-panel-bg rounded-xl p-4 border border-border-dark hover:shadow-lg transition-shadow">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-12 h-12 bg-warning/20 rounded-full flex items-center justify-center">
+                            <i class="fas fa-clock text-warning text-lg"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm text-slate-400">System Uptime</p>
+                            <p class="text-xl font-bold" data-bind="system.uptime">14:32:18</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-panel-bg rounded-xl p-4 border border-border-dark hover:shadow-lg transition-shadow">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-12 h-12 bg-blue-500/20 rounded-full flex items-center justify-center">
+                            <i class="fas fa-wifi text-blue-400 text-lg"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm text-slate-400">MT5 Status</p>
+                            <p class="text-lg font-medium text-profit" data-bind="mt5.status">Connected</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- @END_COMPONENT: SystemOverview -->
+
+            <!-- @COMPONENT: PerformanceMetrics -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="bg-panel-bg rounded-xl p-6 border border-border-dark">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold flex items-center space-x-2">
+                            <i class="fas fa-wallet text-primary"></i>
+                            <span>Total Equity</span>
+                        </h3>
+                    </div>
+                    <div class="text-3xl font-bold mb-2" data-bind="portfolio.totalEquity">$2,847.32</div>
+                    <div class="flex items-center space-x-2 text-sm">
+                        <span class="text-profit flex items-center">
+                            <i class="fas fa-arrow-up mr-1"></i>
+                            <span data-bind="portfolio.dailyChange">+$142.18 (5.2%)</span>
+                        </span>
+                        <span class="text-slate-400">today</span>
+                    </div>
+                </div>
+                
+                <div class="bg-panel-bg rounded-xl p-6 border border-border-dark">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold flex items-center space-x-2">
+                            <i class="fas fa-chart-line text-profit"></i>
+                            <span>Win Rate</span>
+                        </h3>
+                    </div>
+                    <div class="text-3xl font-bold mb-2" data-bind="performance.winRate">73.4%</div>
+                    <div class="flex items-center space-x-2 text-sm">
+                        <span class="text-profit">34 wins</span>
+                        <span class="text-slate-400">/</span>
+                        <span class="text-loss">12 losses</span>
+                        <span class="text-slate-400">today</span>
+                    </div>
+                </div>
+                
+                <div class="bg-panel-bg rounded-xl p-6 border border-border-dark">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold flex items-center space-x-2">
+                            <i class="fas fa-percentage text-warning"></i>
+                            <span>Risk Level</span>
+                        </h3>
+                    </div>
+                    <div class="text-3xl font-bold mb-2" data-bind="risk.currentLevel">2.5%</div>
+                    <div class="text-sm text-slate-400">
+                        <span>Auto-scaled from </span>
+                        <span class="text-warning" data-bind="risk.previousLevel">2.0%</span>
+                        <span> after +10% growth</span>
+                    </div>
+                </div>
+            </div>
+            <!-- @END_COMPONENT: PerformanceMetrics -->
+
+            <!-- @COMPONENT: EconomicCalendar -->
+            <div class="bg-panel-bg rounded-xl p-6 border border-border-dark">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold flex items-center space-x-2">
+                        <i class="fas fa-calendar-alt text-warning"></i>
+                        <span>Economic Calendar & News Filter</span>
+                    </h3>
+                    <button class="bg-slate-700 hover:bg-slate-600 px-3 py-1 rounded-lg text-sm transition-colors" data-event="click:refreshNews">
+                        <i class="fas fa-sync-alt mr-1"></i>
+                        Refresh
+                    </button>
+                </div>
+                
+                <div class="space-y-3" data-mock="true">
+                    <div class="flex items-center p-3 bg-red-900/20 border border-red-700/30 rounded-lg">
+                        <div class="w-8 h-8 bg-loss rounded-full flex items-center justify-center mr-3">
+                            <i class="fas fa-exclamation text-white text-sm"></i>
+                        </div>
+                        <div class="flex-1">
+                            <div class="flex items-center space-x-2">
+                                <span class="font-medium">USD - Non-Farm Payrolls</span>
+                                <span class="text-xs bg-loss px-2 py-1 rounded">HIGH IMPACT</span>
+                                <span class="text-xs text-red-300">Trading Paused</span>
+                            </div>
+                            <p class="text-sm text-slate-400 mt-1">Expected: 190K | Previous: 209K | Time: 08:30 EST</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center p-3 bg-yellow-900/20 border border-yellow-700/30 rounded-lg">
+                        <div class="w-8 h-8 bg-warning rounded-full flex items-center justify-center mr-3">
+                            <i class="fas fa-info text-white text-sm"></i>
+                        </div>
+                        <div class="flex-1">
+                            <div class="flex items-center space-x-2">
+                                <span class="font-medium">EUR - ECB Interest Rate Decision</span>
+                                <span class="text-xs bg-warning px-2 py-1 rounded text-black">MEDIUM</span>
+                                <span class="text-xs text-yellow-300">Monitoring</span>
+                            </div>
+                            <p class="text-sm text-slate-400 mt-1">Expected: 4.50% | Previous: 4.50% | Time: 14:15 CET</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- @END_COMPONENT: EconomicCalendar -->
+
+            <!-- @COMPONENT: AccountsAndCharts -->
+            <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                
+                <!-- @COMPONENT: TradingAccounts -->
+                <div class="bg-panel-bg rounded-xl p-6 border border-border-dark">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold flex items-center space-x-2">
+                            <i class="fas fa-user-tie text-primary"></i>
+                            <span>Trading Accounts</span>
+                        </h3>
+                        <button class="bg-slate-700 hover:bg-slate-600 px-3 py-1 rounded-lg text-sm transition-colors" data-event="click:refreshAccounts">
+                            <i class="fas fa-sync-alt mr-1"></i>
+                            Refresh
+                        </button>
+                    </div>
+                    
+                    <div class="space-y-4" data-mock="true">
+                        <!-- @MAP: accounts.map(account => ( -->
+                        <div class="border border-border-dark rounded-lg p-4 hover:border-primary/50 transition-colors">
+                            <div class="flex items-center justify-between mb-3">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-3 h-3 bg-profit rounded-full" data-bind="account.status"></div>
+                                    <h4 class="font-medium" data-bind="account.name">Exness Pro - Main</h4>
+                                    <span class="text-xs bg-primary px-2 py-1 rounded" data-bind="account.type">LIVE</span>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <button class="bg-profit hover:bg-green-600 px-3 py-1 rounded text-sm transition-colors" data-event="click:pauseResumeTrading">
+                                        <i class="fas fa-pause mr-1"></i>
+                                        Pause
+                                    </button>
+                                    <button class="bg-slate-700 hover:bg-slate-600 px-2 py-1 rounded text-sm transition-colors" data-event="click:accountSettings">
+                                        <i class="fas fa-cog"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="grid grid-cols-2 gap-4 text-sm">
+                                <div>
+                                    <p class="text-slate-400">Balance</p>
+                                    <p class="font-medium text-lg" data-bind="account.balance">$1,247.83</p>
+                                </div>
+                                <div>
+                                    <p class="text-slate-400">Today's P/L</p>
+                                    <p class="font-medium text-lg text-profit" data-bind="account.dailyPL">+$67.45</p>
+                                </div>
+                                <div>
+                                    <p class="text-slate-400">Active Trades</p>
+                                    <p class="font-medium" data-bind="account.activeTrades">2 positions</p>
+                                </div>
+                                <div>
+                                    <p class="text-slate-400">Risk Level</p>
+                                    <p class="font-medium text-warning" data-bind="account.riskLevel">2.5%</p>
+                                </div>
+                            </div>
+                            
+                            <!-- Strategy Status -->
+                            <div class="mt-3 pt-3 border-t border-border-dark">
+                                <p class="text-xs text-slate-400 mb-2">Active Strategies</p>
+                                <div class="flex flex-wrap gap-2">
+                                    <span class="text-xs bg-profit/20 text-profit px-2 py-1 rounded border border-profit/30">Trend Following</span>
+                                    <span class="text-xs bg-blue-500/20 text-blue-400 px-2 py-1 rounded border border-blue-500/30">Mean Reversion</span>
+                                    <span class="text-xs bg-yellow-500/20 text-yellow-400 px-2 py-1 rounded border border-yellow-500/30">Breakout Scalp</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="border border-border-dark rounded-lg p-4 hover:border-primary/50 transition-colors">
+                            <div class="flex items-center justify-between mb-3">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-3 h-3 bg-loss rounded-full" data-bind="account.status"></div>
+                                    <h4 class="font-medium" data-bind="account.name">IC Markets - Scalper</h4>
+                                    <span class="text-xs bg-loss px-2 py-1 rounded" data-bind="account.type">PAUSED</span>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <button class="bg-primary hover:bg-indigo-600 px-3 py-1 rounded text-sm transition-colors" data-event="click:pauseResumeTrading">
+                                        <i class="fas fa-play mr-1"></i>
+                                        Resume
+                                    </button>
+                                    <button class="bg-slate-700 hover:bg-slate-600 px-2 py-1 rounded text-sm transition-colors" data-event="click:accountSettings">
+                                        <i class="fas fa-cog"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="grid grid-cols-2 gap-4 text-sm">
+                                <div>
+                                    <p class="text-slate-400">Balance</p>
+                                    <p class="font-medium text-lg" data-bind="account.balance">$673.21</p>
+                                </div>
+                                <div>
+                                    <p class="text-slate-400">Today's P/L</p>
+                                    <p class="font-medium text-lg text-loss" data-bind="account.dailyPL">-$23.12</p>
+                                </div>
+                                <div>
+                                    <p class="text-slate-400">Active Trades</p>
+                                    <p class="font-medium" data-bind="account.activeTrades">0 positions</p>
+                                </div>
+                                <div>
+                                    <p class="text-slate-400">Risk Level</p>
+                                    <p class="font-medium text-orange-400" data-bind="account.riskLevel">1.0%</p>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-3 pt-3 border-t border-border-dark">
+                                <p class="text-xs text-slate-400 mb-2">Reason: Daily loss limit reached (-20%)</p>
+                                <div class="text-xs text-orange-400">Auto-resume: Tomorrow 00:00 server time</div>
+                            </div>
+                        </div>
+                        <!-- @END_MAP )) -->
+                    </div>
+                </div>
+                <!-- @END_COMPONENT: TradingAccounts -->
+
+                <!-- @COMPONENT: PerformanceChart -->
+                <div class="bg-panel-bg rounded-xl p-6 border border-border-dark">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold flex items-center space-x-2">
+                            <i class="fas fa-chart-area text-profit"></i>
+                            <span>Portfolio Performance</span>
+                        </h3>
+                        <div class="flex items-center space-x-2">
+                            <select class="bg-slate-700 border border-border-dark rounded px-2 py-1 text-sm" data-event="change:changeTimeframe">
+                                <option value="1D">1D</option>
+                                <option value="1W" selected>1W</option>
+                                <option value="1M">1M</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="h-64">
+                        <canvas id="performanceChart" data-implementation="Chart.js line chart showing portfolio growth over time"></canvas>
+                    </div>
+                    
+                    <!-- Chart Legend -->
+                    <div class="flex items-center justify-center space-x-6 mt-4 text-sm">
+                        <div class="flex items-center space-x-2">
+                            <div class="w-3 h-3 bg-profit rounded-full"></div>
+                            <span>Portfolio Value</span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <div class="w-3 h-3 bg-primary rounded-full"></div>
+                            <span>Daily P/L</span>
+                        </div>
+                    </div>
+                </div>
+                <!-- @END_COMPONENT: PerformanceChart -->
+            </div>
+            <!-- @END_COMPONENT: AccountsAndCharts -->
+
+            <!-- @COMPONENT: TradingActivity -->
+            <div class="bg-panel-bg rounded-xl p-6 border border-border-dark">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold flex items-center space-x-2">
+                        <i class="fas fa-list-alt text-primary"></i>
+                        <span>Recent Trading Activity</span>
+                    </h3>
+                    <div class="flex items-center space-x-2">
+                        <button class="bg-slate-700 hover:bg-slate-600 px-3 py-1 rounded-lg text-sm transition-colors" data-event="click:exportTrades">
+                            <i class="fas fa-download mr-1"></i>
+                            Export CSV
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="border-b border-border-dark">
+                                <th class="text-left py-3 px-2 font-medium text-slate-400">Time</th>
+                                <th class="text-left py-3 px-2 font-medium text-slate-400">Account</th>
+                                <th class="text-left py-3 px-2 font-medium text-slate-400">Symbol</th>
+                                <th class="text-left py-3 px-2 font-medium text-slate-400">Type</th>
+                                <th class="text-left py-3 px-2 font-medium text-slate-400">Size</th>
+                                <th class="text-left py-3 px-2 font-medium text-slate-400">Entry</th>
+                                <th class="text-left py-3 px-2 font-medium text-slate-400">Exit</th>
+                                <th class="text-left py-3 px-2 font-medium text-slate-400">P/L</th>
+                                <th class="text-left py-3 px-2 font-medium text-slate-400">Strategy</th>
+                            </tr>
+                        </thead>
+                        <tbody data-mock="true">
+                            <!-- @MAP: trades.map(trade => ( -->
+                            <tr class="border-b border-border-dark/50 hover:bg-slate-800/30">
+                                <td class="py-3 px-2" data-bind="trade.time">14:32:18</td>
+                                <td class="py-3 px-2" data-bind="trade.account">Exness Pro</td>
+                                <td class="py-3 px-2 font-medium" data-bind="trade.symbol">EURUSD</td>
+                                <td class="py-3 px-2">
+                                    <span class="text-xs bg-profit px-2 py-1 rounded" data-bind="trade.type">BUY</span>
+                                </td>
+                                <td class="py-3 px-2" data-bind="trade.size">0.03</td>
+                                <td class="py-3 px-2" data-bind="trade.entryPrice">1.0847</td>
+                                <td class="py-3 px-2" data-bind="trade.exitPrice">1.0852</td>
+                                <td class="py-3 px-2 text-profit font-medium" data-bind="trade.profit">+$1.50</td>
+                                <td class="py-3 px-2 text-xs text-slate-400" data-bind="trade.strategy">Trend</td>
+                            </tr>
+                            
+                            <tr class="border-b border-border-dark/50 hover:bg-slate-800/30">
+                                <td class="py-3 px-2" data-bind="trade.time">14:28:45</td>
+                                <td class="py-3 px-2" data-bind="trade.account">Exness Pro</td>
+                                <td class="py-3 px-2 font-medium" data-bind="trade.symbol">GBPUSD</td>
+                                <td class="py-3 px-2">
+                                    <span class="text-xs bg-loss px-2 py-1 rounded" data-bind="trade.type">SELL</span>
+                                </td>
+                                <td class="py-3 px-2" data-bind="trade.size">0.02</td>
+                                <td class="py-3 px-2" data-bind="trade.entryPrice">1.2734</td>
+                                <td class="py-3 px-2" data-bind="trade.exitPrice">1.2729</td>
+                                <td class="py-3 px-2 text-profit font-medium" data-bind="trade.profit">+$1.00</td>
+                                <td class="py-3 px-2 text-xs text-slate-400" data-bind="trade.strategy">Breakout</td>
+                            </tr>
+                            
+                            <tr class="border-b border-border-dark/50 hover:bg-slate-800/30">
+                                <td class="py-3 px-2" data-bind="trade.time">14:22:12</td>
+                                <td class="py-3 px-2" data-bind="trade.account">IC Markets</td>
+                                <td class="py-3 px-2 font-medium" data-bind="trade.symbol">USDJPY</td>
+                                <td class="py-3 px-2">
+                                    <span class="text-xs bg-profit px-2 py-1 rounded" data-bind="trade.type">BUY</span>
+                                </td>
+                                <td class="py-3 px-2" data-bind="trade.size">0.01</td>
+                                <td class="py-3 px-2" data-bind="trade.entryPrice">149.12</td>
+                                <td class="py-3 px-2" data-bind="trade.exitPrice">149.03</td>
+                                <td class="py-3 px-2 text-loss font-medium" data-bind="trade.profit">-$0.90</td>
+                                <td class="py-3 px-2 text-xs text-slate-400" data-bind="trade.strategy">Mean Rev</td>
+                            </tr>
+                            
+                            <tr class="border-b border-border-dark/50 hover:bg-slate-800/30">
+                                <td class="py-3 px-2" data-bind="trade.time">14:18:33</td>
+                                <td class="py-3 px-2" data-bind="trade.account">Exness Pro</td>
+                                <td class="py-3 px-2 font-medium" data-bind="trade.symbol">AUDUSD</td>
+                                <td class="py-3 px-2">
+                                    <span class="text-xs bg-loss px-2 py-1 rounded" data-bind="trade.type">SELL</span>
+                                </td>
+                                <td class="py-3 px-2" data-bind="trade.size">0.04</td>
+                                <td class="py-3 px-2" data-bind="trade.entryPrice">0.6523</td>
+                                <td class="py-3 px-2" data-bind="trade.exitPrice">0.6518</td>
+                                <td class="py-3 px-2 text-profit font-medium" data-bind="trade.profit">+$2.00</td>
+                                <td class="py-3 px-2 text-xs text-slate-400" data-bind="trade.strategy">Trend</td>
+                            </tr>
+                            
+                            <tr class="border-b border-border-dark/50 hover:bg-slate-800/30">
+                                <td class="py-3 px-2" data-bind="trade.time">14:15:07</td>
+                                <td class="py-3 px-2" data-bind="trade.account">Exness Pro</td>
+                                <td class="py-3 px-2 font-medium" data-bind="trade.symbol">USDCAD</td>
+                                <td class="py-3 px-2">
+                                    <span class="text-xs bg-profit px-2 py-1 rounded" data-bind="trade.type">BUY</span>
+                                </td>
+                                <td class="py-3 px-2" data-bind="trade.size">0.02</td>
+                                <td class="py-3 px-2" data-bind="trade.entryPrice">1.3845</td>
+                                <td class="py-3 px-2" data-bind="trade.exitPrice">1.3851</td>
+                                <td class="py-3 px-2 text-profit font-medium" data-bind="trade.profit">+$0.87</td>
+                                <td class="py-3 px-2 text-xs text-slate-400" data-bind="trade.strategy">Breakout</td>
+                            </tr>
+                            <!-- @END_MAP )) -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Pagination -->
+                <div class="flex items-center justify-between mt-4 pt-4 border-t border-border-dark">
+                    <div class="text-sm text-slate-400">
+                        Showing 1-5 of 47 trades today
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <button class="bg-slate-700 hover:bg-slate-600 px-3 py-1 rounded text-sm transition-colors" data-event="click:previousPage">
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
+                        <span class="px-3 py-1 bg-primary rounded text-sm">1</span>
+                        <button class="bg-slate-700 hover:bg-slate-600 px-3 py-1 rounded text-sm transition-colors" data-event="click:nextPage">
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <!-- @END_COMPONENT: TradingActivity -->
+
+            <!-- @COMPONENT: RiskManagement -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="bg-panel-bg rounded-xl p-6 border border-border-dark">
+                    <h3 class="text-lg font-semibold mb-4 flex items-center space-x-2">
+                        <i class="fas fa-shield-alt text-warning"></i>
+                        <span>Risk Management</span>
+                    </h3>
+                    
+                    <div class="space-y-4" data-mock="true">
+                        <div class="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg">
+                            <div>
+                                <p class="font-medium">Daily Loss Limit</p>
+                                <p class="text-sm text-slate-400">Auto-stop at -20% equity</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-profit font-medium">Active</p>
+                                <p class="text-xs text-slate-400">$569.46 remaining</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg">
+                            <div>
+                                <p class="font-medium">Equity Protection</p>
+                                <p class="text-sm text-slate-400">50% of 20%+ gains locked</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-primary font-medium">$423.18</p>
+                                <p class="text-xs text-slate-400">Protected capital</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg">
+                            <div>
+                                <p class="font-medium">Kill Switch</p>
+                                <p class="text-sm text-slate-400">3 consecutive losses → 1h pause</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-profit font-medium">Ready</p>
+                                <p class="text-xs text-slate-400">0/3 losses</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg">
+                            <div>
+                                <p class="font-medium">Auto Risk Scaling</p>
+                                <p class="text-sm text-slate-400">+0.5% per 10% growth</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-warning font-medium">2.5%</p>
+                                <p class="text-xs text-slate-400">Current level</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-panel-bg rounded-xl p-6 border border-border-dark">
+                    <h3 class="text-lg font-semibold mb-4 flex items-center space-x-2">
+                        <i class="fas fa-calculator text-primary"></i>
+                        <span>Position Size Calculator</span>
+                    </h3>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-400 mb-2">Account Balance</label>
+                            <input type="number" value="1247.83" class="w-full bg-slate-800 border border-border-dark rounded-lg px-3 py-2 text-slate-100" data-bind="calculator.balance" readonly>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-slate-400 mb-2">Risk Percentage</label>
+                            <input type="number" step="0.1" value="2.5" class="w-full bg-slate-800 border border-border-dark rounded-lg px-3 py-2 text-slate-100" data-bind="calculator.riskPercent">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-slate-400 mb-2">Stop Loss (pips)</label>
+                            <input type="number" value="8" class="w-full bg-slate-800 border border-border-dark rounded-lg px-3 py-2 text-slate-100" data-bind="calculator.stopLoss">
+                        </div>
+                        
+                        <div class="p-4 bg-gradient-to-r from-primary/20 to-indigo-500/20 rounded-lg border border-primary/30">
+                            <div class="flex items-center justify-between">
+                                <span class="font-medium">Recommended Lot Size:</span>
+                                <span class="text-xl font-bold text-primary" data-bind="calculator.result">0.039</span>
+                            </div>
+                            <p class="text-sm text-slate-400 mt-1">Risk Amount: $31.20</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- @END_COMPONENT: RiskManagement -->
+        </div>
+    </div>
+    
+    <!-- @COMPONENT: AddAccountModal -->
+    <div class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden z-50" id="addAccountModal" data-modal="addAccount">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-panel-bg rounded-xl border border-border-dark w-full max-w-lg">
+                <div class="flex items-center justify-between p-6 border-b border-border-dark">
+                    <h3 class="text-lg font-semibold flex items-center space-x-2">
+                        <i class="fas fa-plus-circle text-primary"></i>
+                        <span>Add Trading Account</span>
+                    </h3>
+                    <button class="text-slate-400 hover:text-slate-200 transition-colors" data-event="click:closeModal">
+                        <i class="fas fa-times text-lg"></i>
+                    </button>
+                </div>
+                
+                <div class="p-6 space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-400 mb-2">Broker</label>
+                        <select class="w-full bg-slate-800 border border-border-dark rounded-lg px-3 py-2 text-slate-100" data-bind="newAccount.broker">
+                            <option value="">Select Broker</option>
+                            <option value="exness">Exness</option>
+                            <option value="ic-markets">IC Markets</option>
+                            <option value="pepperstone">Pepperstone</option>
+                            <option value="oanda">OANDA</option>
+                            <option value="avatrade">AvaTrade</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-slate-400 mb-2">Account Name</label>
+                        <input type="text" placeholder="e.g., Main Scalping Account" class="w-full bg-slate-800 border border-border-dark rounded-lg px-3 py-2 text-slate-100" data-bind="newAccount.name">
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-400 mb-2">MT5 Login</label>
+                            <input type="text" placeholder="Account number" class="w-full bg-slate-800 border border-border-dark rounded-lg px-3 py-2 text-slate-100" data-bind="newAccount.login">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-400 mb-2">Server</label>
+                            <input type="text" placeholder="MT5 server" class="w-full bg-slate-800 border border-border-dark rounded-lg px-3 py-2 text-slate-100" data-bind="newAccount.server">
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-slate-400 mb-2">Password</label>
+                        <input type="password" placeholder="Trading password" class="w-full bg-slate-800 border border-border-dark rounded-lg px-3 py-2 text-slate-100" data-bind="newAccount.password">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-slate-400 mb-2">Initial Risk Level (%)</label>
+                        <input type="number" step="0.1" value="1.0" min="0.1" max="10" class="w-full bg-slate-800 border border-border-dark rounded-lg px-3 py-2 text-slate-100" data-bind="newAccount.riskLevel">
+                        <p class="text-xs text-slate-500 mt-1">Recommended: 1-2% for larger accounts, 5-10% for small accounts</p>
+                    </div>
+                    
+                    <div class="flex items-center space-x-3">
+                        <input type="checkbox" id="enableStrategies" class="text-primary" data-bind="newAccount.enableStrategies">
+                        <label for="enableStrategies" class="text-sm">Enable all trading strategies</label>
+                    </div>
+                </div>
+                
+                <div class="flex items-center justify-end space-x-3 p-6 border-t border-border-dark">
+                    <button class="bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded-lg transition-colors" data-event="click:closeModal">
+                        Cancel
+                    </button>
+                    <button class="bg-primary hover:bg-indigo-600 px-4 py-2 rounded-lg transition-colors" data-event="click:addAccount">
+                        Connect Account
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- @END_COMPONENT: AddAccountModal -->
+    
+    <!-- @COMPONENT: NotificationToast -->
+    <div class="fixed top-4 right-4 z-50 space-y-2" id="notificationContainer" data-implementation="Toast notification system">
+        <!-- Notification toasts will be dynamically inserted here -->
+    </div>
+    <!-- @END_COMPONENT: NotificationToast -->
+    
+    <!-- @END_COMPONENT: MainDashboard -->
+
+    <script>
+        // TODO: Implement comprehensive trading bot logic, MT5 API integration, and real-time data updates
+        
+        (function() {
+            // Theme Management
+            const themeToggle = document.querySelector('[data-event="click:toggleTheme"]');
+            const body = document.body;
+            
+            function toggleTheme() {
+                const currentTheme = body.getAttribute('data-theme');
+                const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                body.setAttribute('data-theme', newTheme);
+                
+                // Update theme toggle icon
+                const icon = themeToggle.querySelector('i');
+                icon.className = newTheme === 'dark' ? 'fas fa-moon' : 'fas fa-sun';
+                
+                // Update CSS variables for light theme
+                if (newTheme === 'light') {
+                    document.documentElement.style.setProperty('--tw-bg-dark-bg', '#f8fafc');
+                    document.documentElement.style.setProperty('--tw-bg-panel-bg', '#ffffff');
+                } else {
+                    document.documentElement.style.setProperty('--tw-bg-dark-bg', '#0f172a');
+                    document.documentElement.style.setProperty('--tw-bg-panel-bg', '#1e293b');
+                }
+            }
+            
+            themeToggle?.addEventListener('click', toggleTheme);
+            
+            // Modal Management
+            const addAccountModal = document.getElementById('addAccountModal');
+            const addAccountButtons = document.querySelectorAll('[data-event="click:addAccount"]');
+            const closeModalButtons = document.querySelectorAll('[data-event="click:closeModal"]');
+            
+            function showModal() {
+                addAccountModal?.classList.remove('hidden');
+            }
+            
+            function hideModal() {
+                addAccountModal?.classList.add('hidden');
+            }
+            
+            addAccountButtons.forEach(btn => btn.addEventListener('click', showModal));
+            closeModalButtons.forEach(btn => btn.addEventListener('click', hideModal));
+            
+            // Performance Chart Initialization
+            const ctx = document.getElementById('performanceChart');
+            if (ctx) {
+                new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                        datasets: [{
+                            label: 'Portfolio Value',
+                            data: [2405.23, 2487.56, 2534.12, 2612.89, 2695.34, 2758.91, 2847.32],
+                            borderColor: '#10b981',
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        },
+                        scales: {
+                            y: {
+                                grid: {
+                                    color: '#334155'
+                                },
+                                ticks: {
+                                    color: '#94a3b8'
+                                }
+                            },
+                            x: {
+                                grid: {
+                                    color: '#334155'
+                                },
+                                ticks: {
+                                    color: '#94a3b8'
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+            
+            // Position Size Calculator
+            function updatePositionCalculator() {
+                const balance = parseFloat(document.querySelector('[data-bind="calculator.balance"]')?.value || 0);
+                const riskPercent = parseFloat(document.querySelector('[data-bind="calculator.riskPercent"]')?.value || 0);
+                const stopLoss = parseFloat(document.querySelector('[data-bind="calculator.stopLoss"]')?.value || 1);
+                
+                const riskAmount = balance * (riskPercent / 100);
+                const lotSize = (riskAmount / stopLoss / 10).toFixed(3); // Simplified calculation
+                
+                const resultElement = document.querySelector('[data-bind="calculator.result"]');
+                if (resultElement) {
+                    resultElement.textContent = lotSize;
+                }
+            }
+            
+            // Attach calculator update events
+            document.querySelectorAll('[data-bind^="calculator."]').forEach(input => {
+                input.addEventListener('input', updatePositionCalculator);
+            });
+            
+            // Simulated real-time updates
+            function simulateRealTimeUpdates() {
+                // Update trade counter
+                const tradesCounterElements = document.querySelectorAll('[data-bind="trades.today"]');
+                tradesCounterElements.forEach(el => {
+                    const current = parseInt(el.textContent);
+                    if (Math.random() > 0.95) { // 5% chance to increment
+                        el.textContent = current + 1;
+                    }
+                });
+                
+                // Update connection status indicator
+                const statusIndicators = document.querySelectorAll('.animate-pulse');
+                statusIndicators.forEach(indicator => {
+                    // Randomly change status color
+                    if (Math.random() > 0.98) {
+                        indicator.classList.toggle('bg-profit');
+                        indicator.classList.toggle('bg-yellow-500');
+                    }
+                });
+            }
+            
+            // Start real-time simulation
+            setInterval(simulateRealTimeUpdates, 1000);
+            
+            // System uptime counter
+            let uptimeSeconds = 14 * 3600 + 32 * 60 + 18; // Start at 14:32:18
+            
+            function updateUptime() {
+                uptimeSeconds++;
+                const hours = Math.floor(uptimeSeconds / 3600);
+                const minutes = Math.floor((uptimeSeconds % 3600) / 60);
+                const seconds = uptimeSeconds % 60;
+                
+                const uptimeString = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                
+                const uptimeElements = document.querySelectorAll('[data-bind="system.uptime"]');
+                uptimeElements.forEach(el => el.textContent = uptimeString);
+            }
+            
+            setInterval(updateUptime, 1000);
+            
+            // Initialize calculator
+            updatePositionCalculator();
+            
+            console.log('Forex Scaling Bot Dashboard initialized successfully');
+        })();
+    </script>
+</body>
+</html>

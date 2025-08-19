@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Forex Scaling Bot - Professional Trading Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'trading-dark': '#0f1419',
+                        'trading-panel': '#1e2329',
+                        'trading-gold': '#f0b90b',
+                        'profit-green': '#2ecc71',
+                        'loss-red': '#e74c3c',
+                        'trading-blue': '#3498db',
+                        'trading-warning': '#f39c12',
+                        'text-muted': '#8fa5b8',
+                        'text-dim': '#5a6c7d'
+                    },
+                    fontFamily: {
+                        'trading': ['Inter', 'sans-serif']
+                    },
+                    animation: {
+                        'pulse-profit': 'pulse-profit 2s infinite',
+                        'pulse-loss': 'pulse-loss 2s infinite',
+                        'slide-up': 'slide-up 0.3s ease-out'
+                    }
+                }
+            }
+        };
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        @keyframes pulse-profit { 0%, 100% { box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.4); } 50% { box-shadow: 0 0 0 10px rgba(46, 204, 113, 0); } }
+        @keyframes pulse-loss { 0%, 100% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.4); } 50% { box-shadow: 0 0 0 10px rgba(231, 76, 60, 0); } }
+        @keyframes slide-up { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .trading-gradient { background: linear-gradient(135deg, #f0b90b 0%, #e67e22 100%); }
+        .profit-gradient { background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%); }
+        .loss-gradient { background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); }
+        .chart-container { background: linear-gradient(135deg, #1e2329 0%, #252a31 100%); }
+    </style>
+</head>
+<body class="bg-trading-dark text-white font-trading min-h-screen">
+    <!-- @COMPONENT: Header [Navigation and controls] -->
+    <header class="bg-trading-panel border-b border-gray-700 sticky top-0 z-50">
+        <div class="max-w-full px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <!-- Logo and System Status -->
+                <div class="flex items-center space-x-4">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 bg-gradient-to-br from-trading-gold to-orange-500 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-chart-line text-white text-lg"></i>
+                        </div>
+                        <div>
+                            <h1 class="text-xl font-bold text-white">Forex Scaling Bot</h1>
+                            <p class="text-xs text-text-muted">Professional Trading System</p>
+                        </div>
+                    </div>
+                    
+                    <!-- System Status Indicator -->
+                    <div class="flex items-center space-x-2 bg-trading-dark px-3 py-2 rounded-lg">
+                        <div class="w-3 h-3 bg-profit-green rounded-full animate-pulse" data-bind="systemStatus"></div>
+                        <span class="text-sm text-text-muted">System Online</span>
+                    </div>
+                </div>
+
+                <!-- Trading Controls -->
+                <div class="flex items-center space-x-3">
+                    <!-- Emergency Stop -->
+                    <button class="bg-loss-red hover:bg-red-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-all transform hover:scale-105" 
+                            data-event="click:emergencyStop" data-implementation="Should immediately stop all trading activity">
+                        <i class="fas fa-stop-circle"></i>
+                        <span class="hidden sm:inline">Emergency Stop</span>
+                    </button>
+                    
+                    <!-- Resume/Pause Toggle -->
+                    <button class="bg-trading-blue hover:bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-all transform hover:scale-105"
+                            data-event="click:toggleTrading" data-implementation="Should pause/resume trading based on current state">
+                        <i class="fas fa-play" data-bind="tradingStatus.icon"></i>
+                        <span class="hidden sm:inline" data-bind="tradingStatus.text">Resume</span>
+                    </button>
+                    
+                    <!-- Theme Toggle -->
+                    <button class="bg-trading-panel hover:bg-gray-700 text-white p-2 rounded-lg transition-all"
+                            data-event="click:toggleTheme" data-implementation="Should toggle between dark and light themes">
+                        <i class="fas fa-moon"></i>
+                    </button>
+                    
+                    <!-- Settings -->
+                    <button class="bg-trading-panel hover:bg-gray-700 text-white p-2 rounded-lg transition-all">
+                        <i class="fas fa-cog"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+    <!-- @END_COMPONENT: Header -->
+
+    <div class="flex min-h-screen">
+        <!-- @COMPONENT: Sidebar [Quick stats and account overview] -->
+        <aside class="w-80 bg-trading-panel border-r border-gray-700 hidden lg:block">
+            <div class="p-6">
+                <!-- Account Summary -->
+                <div class="mb-6">
+                    <h2 class="text-lg font-semibold mb-4 flex items-center">
+                        <i class="fas fa-wallet mr-2 text-trading-gold"></i>
+                        Account Overview
+                    </h2>
+                    
+                    <!-- Primary Account Stats -->
+                    <div class="space-y-4">
+                        <div class="bg-trading-dark p-4 rounded-lg">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-text-muted text-sm">Total Equity</span>
+                                <i class="fas fa-dollar-sign text-trading-gold"></i>
+                            </div>
+                            <div class="text-2xl font-bold text-white" data-bind="account.totalEquity">$2,847.32</div>
+                            <div class="flex items-center text-sm mt-1">
+                                <i class="fas fa-arrow-up text-profit-green mr-1"></i>
+                                <span class="text-profit-green" data-bind="account.dailyChange">+$247.32 (9.5%)</span>
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="bg-trading-dark p-3 rounded-lg">
+                                <div class="text-xs text-text-muted mb-1">Today's P/L</div>
+                                <div class="text-lg font-bold text-profit-green" data-bind="account.dailyPL">+$187.45</div>
+                            </div>
+                            <div class="bg-trading-dark p-3 rounded-lg">
+                                <div class="text-xs text-text-muted mb-1">Win Rate</div>
+                                <div class="text-lg font-bold text-white" data-bind="account.winRate">78.3%</div>
+                            </div>
+                            <div class="bg-trading-dark p-3 rounded-lg">
+                                <div class="text-xs text-text-muted mb-1">Active Trades</div>
+                                <div class="text-lg font-bold text-trading-blue" data-bind="account.activeTrades">14</div>
+                            </div>
+                            <div class="bg-trading-dark p-3 rounded-lg">
+                                <div class="text-xs text-text-muted mb-1">Risk Level</div>
+                                <div class="text-lg font-bold text-trading-warning" data-bind="account.riskLevel">2.3%</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Trading Accounts List -->
+                <div class="mb-6">
+                    <h3 class="text-md font-semibold mb-3 flex items-center justify-between">
+                        <span><i class="fas fa-user-tie mr-2 text-trading-gold"></i>Accounts</span>
+                        <button class="text-xs text-trading-blue hover:text-blue-400" data-event="click:addAccount">
+                            <i class="fas fa-plus"></i> Add
+                        </button>
+                    </h3>
+                    
+                    <!-- @MAP: accounts.map(account => ( -->
+                    <div class="space-y-2" data-mock="true">
+                        <div class="bg-trading-dark p-3 rounded-lg border-l-4 border-profit-green">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="font-medium text-sm">Exness Pro #1847</span>
+                                <div class="flex items-center space-x-1">
+                                    <div class="w-2 h-2 bg-profit-green rounded-full"></div>
+                                    <span class="text-xs text-text-muted">Active</span>
+                                </div>
+                            </div>
+                            <div class="text-xs text-text-muted mb-1">Balance: $1,247.82 | Risk: 2.5%</div>
+                            <div class="text-xs">
+                                <span class="text-profit-green">+$127.45</span>
+                                <span class="text-text-muted ml-2">8 trades</span>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-trading-dark p-3 rounded-lg border-l-4 border-trading-blue">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="font-medium text-sm">IC Markets #2891</span>
+                                <div class="flex items-center space-x-1">
+                                    <div class="w-2 h-2 bg-trading-blue rounded-full"></div>
+                                    <span class="text-xs text-text-muted">Paused</span>
+                                </div>
+                            </div>
+                            <div class="text-xs text-text-muted mb-1">Balance: $1,599.50 | Risk: 2.0%</div>
+                            <div class="text-xs">
+                                <span class="text-profit-green">+$59.87</span>
+                                <span class="text-text-muted ml-2">6 trades</span>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- @END_MAP )) -->
+                </div>
+
+                <!-- Risk Management Status -->
+                <div class="bg-trading-dark p-4 rounded-lg">
+                    <h3 class="text-md font-semibold mb-3 flex items-center">
+                        <i class="fas fa-shield-alt mr-2 text-profit-green"></i>
+                        Risk Management
+                    </h3>
+                    
+                    <div class="space-y-2 text-sm">
+                        <div class="flex justify-between">
+                            <span class="text-text-muted">Daily Loss Limit</span>
+                            <span class="text-profit-green">-$284.73 / -$569.46</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-text-muted">Max Risk Per Trade</span>
+                            <span class="text-white">2.5%</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-text-muted">Equity Protection</span>
+                            <span class="text-profit-green">Active</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-text-muted">Kill Switch</span>
+                            <span class="text-white">0/3 Triggers</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+        <!-- @END_COMPONENT: Sidebar -->
+
+        <!-- @COMPONENT: MainContent [Charts, trading data, and controls] -->
+        <main class="flex-1 p-6 overflow-auto">
+            <!-- Trading Performance Overview -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+                <!-- Performance Chart -->
+                <div class="lg:col-span-2 chart-container rounded-lg p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-xl font-semibold flex items-center">
+                            <i class="fas fa-chart-area mr-2 text-trading-gold"></i>
+                            Performance Analytics
+                        </h2>
+                        <div class="flex space-x-2">
+                            <button class="text-xs bg-trading-blue text-white px-3 py-1 rounded active">1D</button>
+                            <button class="text-xs bg-gray-600 text-gray-300 px-3 py-1 rounded">7D</button>
+                            <button class="text-xs bg-gray-600 text-gray-300 px-3 py-1 rounded">1M</button>
+                        </div>
+                    </div>
+                    
+                    <!-- @FUNCTIONALITY: This chart should display real-time account performance using Chart.js or similar library -->
+                    <div class="h-80 bg-trading-dark rounded-lg flex items-center justify-center">
+                        <div class="text-center text-text-muted">
+                            <i class="fas fa-chart-line text-4xl mb-4 text-trading-gold"></i>
+                            <p>Performance Chart Loading...</p>
+                            <p class="text-xs mt-2">Real-time equity curve with trade markers</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Trade Layering Visualization -->
+                <div class="chart-container rounded-lg p-6">
+                    <h3 class="text-lg font-semibold mb-4 flex items-center">
+                        <i class="fas fa-layer-group mr-2 text-trading-gold"></i>
+                        Position Layers
+                    </h3>
+                    
+                    <div class="space-y-3" data-mock="true">
+                        <!-- EURUSD Layered Position -->
+                        <div class="bg-trading-dark rounded-lg p-4">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="font-medium text-sm">EURUSD</span>
+                                <span class="text-xs text-profit-green">+45.8 pips</span>
+                            </div>
+                            
+                            <!-- Layer Visualization -->
+                            <div class="space-y-1">
+                                <div class="flex items-center space-x-2">
+                                    <div class="w-2 h-2 bg-profit-green rounded-full"></div>
+                                    <span class="text-xs text-text-muted">Layer 1: 0.10 lots @ 1.0892</span>
+                                    <span class="text-xs text-profit-green">+23.4 pips</span>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <div class="w-2 h-2 bg-profit-green rounded-full"></div>
+                                    <span class="text-xs text-text-muted">Layer 2: 0.08 lots @ 1.0897</span>
+                                    <span class="text-xs text-profit-green">+18.4 pips</span>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <div class="w-2 h-2 bg-trading-blue rounded-full"></div>
+                                    <span class="text-xs text-text-muted">Layer 3: 0.05 lots @ 1.0902</span>
+                                    <span class="text-xs text-profit-green">+4.0 pips</span>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-3 pt-2 border-t border-gray-600">
+                                <div class="flex justify-between text-xs">
+                                    <span class="text-text-muted">Total Size: 0.23 lots</span>
+                                    <span class="text-profit-green font-medium">+$189.45</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- GBPUSD Position -->
+                        <div class="bg-trading-dark rounded-lg p-4">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="font-medium text-sm">GBPUSD</span>
+                                <span class="text-xs text-loss-red">-12.3 pips</span>
+                            </div>
+                            
+                            <div class="space-y-1">
+                                <div class="flex items-center space-x-2">
+                                    <div class="w-2 h-2 bg-loss-red rounded-full"></div>
+                                    <span class="text-xs text-text-muted">Layer 1: 0.12 lots @ 1.2734</span>
+                                    <span class="text-xs text-loss-red">-12.3 pips</span>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-3 pt-2 border-t border-gray-600">
+                                <div class="flex justify-between text-xs">
+                                    <span class="text-text-muted">Total Size: 0.12 lots</span>
+                                    <span class="text-loss-red font-medium">-$89.67</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Economic Calendar and News -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                <div class="bg-trading-panel rounded-lg p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-semibold flex items-center">
+                            <i class="fas fa-calendar-alt mr-2 text-trading-gold"></i>
+                            Economic Calendar
+                        </h3>
+                        <button class="text-xs bg-trading-blue text-white px-3 py-1 rounded" data-event="click:refreshNews">
+                            <i class="fas fa-sync-alt mr-1"></i>Refresh
+                        </button>
+                    </div>
+                    
+                    <div class="space-y-3" data-mock="true">
+                        <!-- High Impact News -->
+                        <div class="bg-loss-red bg-opacity-20 border border-loss-red rounded-lg p-3">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-xs font-medium text-loss-red">HIGH IMPACT</span>
+                                <span class="text-xs text-text-muted">14:30 EST</span>
+                            </div>
+                            <div class="text-sm font-medium">US Non-Farm Payrolls</div>
+                            <div class="text-xs text-text-muted">Forecast: 180K | Previous: 236K</div>
+                        </div>
+                        
+                        <!-- Medium Impact -->
+                        <div class="bg-trading-warning bg-opacity-20 border border-trading-warning rounded-lg p-3">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-xs font-medium text-trading-warning">MEDIUM</span>
+                                <span class="text-xs text-text-muted">16:00 EST</span>
+                            </div>
+                            <div class="text-sm font-medium">USD Core CPI (MoM)</div>
+                            <div class="text-xs text-text-muted">Forecast: 0.3% | Previous: 0.3%</div>
+                        </div>
+                        
+                        <!-- Low Impact -->
+                        <div class="bg-profit-green bg-opacity-20 border border-profit-green rounded-lg p-3">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-xs font-medium text-profit-green">LOW</span>
+                                <span class="text-xs text-text-muted">12:15 EST</span>
+                            </div>
+                            <div class="text-sm font-medium">EUR Industrial Production</div>
+                            <div class="text-xs text-text-muted">Forecast: -0.2% | Previous: 0.1%</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Trading Strategy Status -->
+                <div class="bg-trading-panel rounded-lg p-6">
+                    <h3 class="text-lg font-semibold mb-4 flex items-center">
+                        <i class="fas fa-brain mr-2 text-trading-gold"></i>
+                        Strategy Status
+                    </h3>
+                    
+                    <div class="space-y-4">
+                        <!-- Trend Following -->
+                        <div class="bg-trading-dark rounded-lg p-4">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-sm font-medium">Trend Following</span>
+                                <div class="flex items-center space-x-1">
+                                    <div class="w-2 h-2 bg-profit-green rounded-full"></div>
+                                    <span class="text-xs text-profit-green">Active</span>
+                                </div>
+                            </div>
+                            <div class="text-xs text-text-muted">EMA 20/50 crossover | 6 signals today</div>
+                            <div class="flex justify-between mt-2 text-xs">
+                                <span class="text-text-muted">Win Rate: 73%</span>
+                                <span class="text-profit-green">+$145.23</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Mean Reversion -->
+                        <div class="bg-trading-dark rounded-lg p-4">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-sm font-medium">Mean Reversion</span>
+                                <div class="flex items-center space-x-1">
+                                    <div class="w-2 h-2 bg-profit-green rounded-full"></div>
+                                    <span class="text-xs text-profit-green">Active</span>
+                                </div>
+                            </div>
+                            <div class="text-xs text-text-muted">RSI oversold/overbought | 4 signals today</div>
+                            <div class="flex justify-between mt-2 text-xs">
+                                <span class="text-text-muted">Win Rate: 68%</span>
+                                <span class="text-profit-green">+$67.89</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Breakout Scalping -->
+                        <div class="bg-trading-dark rounded-lg p-4">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-sm font-medium">Breakout Scalping</span>
+                                <div class="flex items-center space-x-1">
+                                    <div class="w-2 h-2 bg-trading-warning rounded-full"></div>
+                                    <span class="text-xs text-trading-warning">Monitoring</span>
+                                </div>
+                            </div>
+                            <div class="text-xs text-text-muted">Bollinger Band breakouts | 2 signals today</div>
+                            <div class="flex justify-between mt-2 text-xs">
+                                <span class="text-text-muted">Win Rate: 85%</span>
+                                <span class="text-loss-red">-$25.67</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Real-time Trading Log -->
+            <div class="bg-trading-panel rounded-lg p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-semibold flex items-center">
+                        <i class="fas fa-list-ul mr-2 text-trading-gold"></i>
+                        Live Trading Activity
+                    </h3>
+                    <div class="flex items-center space-x-3">
+                        <span class="text-sm text-text-muted">
+                            Today's Trades: <span class="text-white font-medium" data-bind="todaysTrades">47</span>
+                        </span>
+                        <button class="text-xs bg-gray-600 text-gray-300 px-3 py-1 rounded">Export</button>
+                    </div>
+                </div>
+                
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="border-b border-gray-600 text-text-muted">
+                                <th class="text-left py-2 px-3">Time</th>
+                                <th class="text-left py-2 px-3">Account</th>
+                                <th class="text-left py-2 px-3">Symbol</th>
+                                <th class="text-left py-2 px-3">Type</th>
+                                <th class="text-left py-2 px-3">Size</th>
+                                <th class="text-left py-2 px-3">Entry</th>
+                                <th class="text-left py-2 px-3">Exit</th>
+                                <th class="text-left py-2 px-3">Pips</th>
+                                <th class="text-left py-2 px-3">P/L</th>
+                                <th class="text-left py-2 px-3">Strategy</th>
+                                <th class="text-left py-2 px-3">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody data-mock="true">
+                            <!-- Recent Trades -->
+                            <tr class="border-b border-gray-700 hover:bg-trading-dark transition-colors">
+                                <td class="py-3 px-3 text-text-muted">14:23:15</td>
+                                <td class="py-3 px-3">Exness #1847</td>
+                                <td class="py-3 px-3 font-medium">EURUSD</td>
+                                <td class="py-3 px-3">
+                                    <span class="bg-profit-green bg-opacity-20 text-profit-green px-2 py-1 rounded text-xs">BUY</span>
+                                </td>
+                                <td class="py-3 px-3">0.10</td>
+                                <td class="py-3 px-3">1.0892</td>
+                                <td class="py-3 px-3">1.0915</td>
+                                <td class="py-3 px-3 text-profit-green">+23.0</td>
+                                <td class="py-3 px-3 text-profit-green font-medium">+$95.40</td>
+                                <td class="py-3 px-3">
+                                    <span class="bg-trading-blue bg-opacity-20 text-trading-blue px-2 py-1 rounded text-xs">Trend</span>
+                                </td>
+                                <td class="py-3 px-3">
+                                    <span class="bg-profit-green bg-opacity-20 text-profit-green px-2 py-1 rounded text-xs">Closed</span>
+                                </td>
+                            </tr>
+                            
+                            <tr class="border-b border-gray-700 hover:bg-trading-dark transition-colors">
+                                <td class="py-3 px-3 text-text-muted">14:19:42</td>
+                                <td class="py-3 px-3">IC Markets #2891</td>
+                                <td class="py-3 px-3 font-medium">GBPUSD</td>
+                                <td class="py-3 px-3">
+                                    <span class="bg-loss-red bg-opacity-20 text-loss-red px-2 py-1 rounded text-xs">SELL</span>
+                                </td>
+                                <td class="py-3 px-3">0.08</td>
+                                <td class="py-3 px-3">1.2754</td>
+                                <td class="py-3 px-3">-</td>
+                                <td class="py-3 px-3 text-loss-red">-8.2</td>
+                                <td class="py-3 px-3 text-loss-red font-medium">-$47.23</td>
+                                <td class="py-3 px-3">
+                                    <span class="bg-trading-warning bg-opacity-20 text-trading-warning px-2 py-1 rounded text-xs">Reversion</span>
+                                </td>
+                                <td class="py-3 px-3">
+                                    <span class="bg-trading-blue bg-opacity-20 text-trading-blue px-2 py-1 rounded text-xs">Open</span>
+                                </td>
+                            </tr>
+                            
+                            <tr class="border-b border-gray-700 hover:bg-trading-dark transition-colors">
+                                <td class="py-3 px-3 text-text-muted">14:15:08</td>
+                                <td class="py-3 px-3">Exness #1847</td>
+                                <td class="py-3 px-3 font-medium">USDJPY</td>
+                                <td class="py-3 px-3">
+                                    <span class="bg-profit-green bg-opacity-20 text-profit-green px-2 py-1 rounded text-xs">BUY</span>
+                                </td>
+                                <td class="py-3 px-3">0.05</td>
+                                <td class="py-3 px-3">149.82</td>
+                                <td class="py-3 px-3">149.97</td>
+                                <td class="py-3 px-3 text-profit-green">+15.0</td>
+                                <td class="py-3 px-3 text-profit-green font-medium">+$34.78</td>
+                                <td class="py-3 px-3">
+                                    <span class="bg-purple-500 bg-opacity-20 text-purple-400 px-2 py-1 rounded text-xs">Breakout</span>
+                                </td>
+                                <td class="py-3 px-3">
+                                    <span class="bg-profit-green bg-opacity-20 text-profit-green px-2 py-1 rounded text-xs">Closed</span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+        <!-- @END_COMPONENT: MainContent -->
+    </div>
+
+    <!-- @COMPONENT: NotificationSystem [Toast notifications for trading events] -->
+    <div id="notification-container" class="fixed top-4 right-4 z-50 space-y-2" data-implementation="Should display real-time notifications">
+        <!-- Notifications will be dynamically inserted here -->
+    </div>
+    <!-- @END_COMPONENT: NotificationSystem -->
+
+    <!-- @STATE: tradingActive:boolean = true -->
+    <!-- @STATE: systemStatus:string = 'online' -->
+    <!-- @STATE: accounts:array = [] -->
+    <!-- @STATE: notifications:array = [] -->
+
+    <script>
+        // TODO: Implement business logic, API calls, and state management
+        
+        (function() {
+            // Initialize dashboard functionality
+            let tradingActive = true;
+            let systemStatus = 'online';
+            let accounts = [];
+            
+            // Simulate real-time updates
+            function updateDashboard() {
+                // TODO: Fetch real account data from MT4/MT5 API
+                // TODO: Update performance charts with Chart.js
+                // TODO: Refresh trading log with latest trades
+                // TODO: Update economic calendar from news API
+            }
+            
+            // Emergency stop functionality
+            function emergencyStop() {
+                // TODO: Implement emergency trading halt
+                // TODO: Close all open positions
+                // TODO: Disable auto-trading
+                console.log('Emergency stop activated');
+            }
+            
+            // Toggle trading state
+            function toggleTrading() {
+                tradingActive = !tradingActive;
+                // TODO: Pause/resume trading algorithms
+                // TODO: Update UI indicators
+                console.log(`Trading ${tradingActive ? 'resumed' : 'paused'}`);
+            }
+            
+            // Theme toggle functionality
+            function toggleTheme() {
+                // TODO: Implement light/dark theme switching
+                // TODO: Update CSS custom properties
+                // TODO: Save theme preference to localStorage
+            }
+            
+            // Start real-time updates
+            setInterval(updateDashboard, 5000); // Update every 5 seconds
+            updateDashboard(); // Initial load
+        })();
+    </script>
+</body>
+</html>

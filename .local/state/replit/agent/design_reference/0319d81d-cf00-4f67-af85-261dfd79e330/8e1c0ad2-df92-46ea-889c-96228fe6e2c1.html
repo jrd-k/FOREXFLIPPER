@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ForexFlip Pro - Smart Capital Scaling Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'dark-bg': '#0f172a',
+                        'panel-bg': '#1e293b',
+                        'profit': '#10b981',
+                        'loss': '#ef4444',
+                        'accent': '#6366f1',
+                        'warning': '#f59e0b',
+                        'border-color': '#334155'
+                    },
+                    fontFamily: {
+                        'trading': ['Inter', 'system-ui', 'sans-serif']
+                    }
+                }
+            }
+        };
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-dark-bg text-slate-100 font-trading">
+    <!-- @COMPONENT: MainDashboard -->
+    <div class="min-h-screen p-4 lg:p-6">
+        <!-- @COMPONENT: DashboardHeader -->
+        <header class="bg-gradient-to-r from-accent to-indigo-600 rounded-xl p-4 lg:p-6 mb-6 shadow-lg">
+            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                <div class="flex items-center gap-3">
+                    <div class="bg-white/20 p-2 rounded-lg">
+                        <i class="fas fa-chart-line text-2xl text-white"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl lg:text-3xl font-bold text-white">ForexFlip Pro</h1>
+                        <p class="text-indigo-100 text-sm">Smart Capital Scaling & Protection</p>
+                    </div>
+                </div>
+                <div class="flex flex-wrap gap-3">
+                    <button class="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg font-semibold transition-all duration-200 flex items-center gap-2 hover:shadow-lg hover:-translate-y-0.5" data-event="click:openAddAccountModal">
+                        <i class="fas fa-plus-circle"></i>
+                        <span class="hidden sm:inline">Add Account</span>
+                    </button>
+                    <button class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg font-semibold transition-all duration-200 flex items-center gap-2 hover:shadow-lg hover:-translate-y-0.5" data-event="click:emergencyStop">
+                        <i class="fas fa-stop-circle"></i>
+                        <span class="hidden sm:inline">Emergency Stop</span>
+                    </button>
+                    <button class="bg-panel-bg hover:bg-slate-600 text-white px-4 py-2 rounded-lg transition-all duration-200 flex items-center gap-2" data-event="click:toggleTheme" data-implementation="Toggle between light and dark themes">
+                        <i class="fas fa-moon"></i>
+                    </button>
+                </div>
+            </div>
+        </header>
+        <!-- @END_COMPONENT: DashboardHeader -->
+
+        <div class="max-w-7xl mx-auto space-y-6">
+            <!-- @COMPONENT: SystemOverview -->
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="bg-panel-bg rounded-xl p-4 lg:p-6 shadow-lg border border-border-color hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+                    <div class="flex items-center gap-4">
+                        <div class="bg-accent/20 p-3 rounded-full">
+                            <i class="fas fa-users text-accent text-xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-slate-400 text-sm">Active Accounts</p>
+                            <p class="text-2xl font-bold" data-bind="dashboard.activeAccounts">5</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-panel-bg rounded-xl p-4 lg:p-6 shadow-lg border border-border-color hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+                    <div class="flex items-center gap-4">
+                        <div class="bg-emerald-500/20 p-3 rounded-full">
+                            <i class="fas fa-exchange-alt text-emerald-500 text-xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-slate-400 text-sm">Today's Trades</p>
+                            <p class="text-2xl font-bold" data-bind="dashboard.todaysTrades">23</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-panel-bg rounded-xl p-4 lg:p-6 shadow-lg border border-border-color hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+                    <div class="flex items-center gap-4">
+                        <div class="bg-blue-500/20 p-3 rounded-full">
+                            <i class="fas fa-clock text-blue-500 text-xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-slate-400 text-sm">Uptime</p>
+                            <p class="text-2xl font-bold" data-bind="dashboard.uptime">72:14:32</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-panel-bg rounded-xl p-4 lg:p-6 shadow-lg border border-border-color hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+                    <div class="flex items-center gap-4">
+                        <div class="bg-emerald-500/20 p-3 rounded-full">
+                            <i class="fas fa-wifi text-emerald-500 text-xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-slate-400 text-sm">Connection</p>
+                            <p class="text-xl font-bold text-emerald-500" data-bind="dashboard.connectionStatus">Stable</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- @END_COMPONENT: SystemOverview -->
+
+            <!-- @COMPONENT: PerformanceMetrics -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="bg-panel-bg rounded-xl p-6 shadow-lg border border-border-color hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+                    <div class="flex items-center gap-3 mb-4">
+                        <i class="fas fa-wallet text-accent text-xl"></i>
+                        <h3 class="text-lg font-semibold">Total Equity</h3>
+                    </div>
+                    <p class="text-3xl font-bold text-white" data-bind="portfolio.totalEquity">$12,847.32</p>
+                    <p class="text-emerald-500 text-sm mt-2">+4.2% from yesterday</p>
+                </div>
+
+                <div class="bg-panel-bg rounded-xl p-6 shadow-lg border border-border-color hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+                    <div class="flex items-center gap-3 mb-4">
+                        <i class="fas fa-chart-line text-emerald-500 text-xl"></i>
+                        <h3 class="text-lg font-semibold">Today's P/L</h3>
+                    </div>
+                    <p class="text-3xl font-bold text-emerald-500" data-bind="portfolio.dailyPL">+$324.67</p>
+                    <p class="text-slate-400 text-sm mt-2">Across 5 accounts</p>
+                </div>
+
+                <div class="bg-panel-bg rounded-xl p-6 shadow-lg border border-border-color hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+                    <div class="flex items-center gap-3 mb-4">
+                        <i class="fas fa-target text-blue-500 text-xl"></i>
+                        <h3 class="text-lg font-semibold">Win Rate</h3>
+                    </div>
+                    <p class="text-3xl font-bold text-white" data-bind="analytics.winRate">73.4%</p>
+                    <p class="text-emerald-500 text-sm mt-2">Last 30 days</p>
+                </div>
+            </div>
+            <!-- @END_COMPONENT: PerformanceMetrics -->
+
+            <!-- @COMPONENT: EconomicCalendar -->
+            <div class="bg-panel-bg rounded-xl p-6 shadow-lg border border-border-color">
+                <div class="flex items-center justify-between mb-6">
+                    <div class="flex items-center gap-3">
+                        <i class="fas fa-calendar-alt text-accent text-xl"></i>
+                        <h3 class="text-xl font-semibold">Economic Calendar</h3>
+                    </div>
+                    <button class="bg-accent hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200 flex items-center gap-2" data-event="click:refreshNews">
+                        <i class="fas fa-sync-alt"></i>
+                        Refresh
+                    </button>
+                </div>
+                
+                <!-- High Impact News Alert -->
+                <div class="bg-gradient-to-r from-red-600 to-red-700 rounded-lg p-4 mb-4 border-l-4 border-red-400">
+                    <div class="flex items-start gap-3">
+                        <i class="fas fa-exclamation-triangle text-yellow-400 text-xl mt-1"></i>
+                        <div>
+                            <p class="font-semibold text-white">High Impact Event</p>
+                            <p class="text-red-100 text-sm">USD Non-Farm Payrolls in 2 hours 15 minutes</p>
+                            <p class="text-red-200 text-xs mt-1">Expected volatility in USD pairs - Risk management active</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-3" data-mock="true">
+                    <!-- @MAP: economicEvents.map(event => ( -->
+                    <div class="flex items-center justify-between p-3 bg-slate-700/50 rounded-lg hover:bg-slate-700 transition-colors duration-200">
+                        <div class="flex items-center gap-4">
+                            <div class="w-2 h-2 bg-warning rounded-full"></div>
+                            <div>
+                                <p class="font-medium" data-bind="event.title">EUR CPI (YoY)</p>
+                                <p class="text-slate-400 text-sm" data-bind="event.time">15:30 GMT</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-sm text-slate-300" data-bind="event.currency">EUR</p>
+                            <span class="px-2 py-1 bg-warning/20 text-warning text-xs rounded-full" data-bind="event.impact">Medium</span>
+                        </div>
+                    </div>
+                    <!-- @END_MAP )) -->
+                </div>
+            </div>
+            <!-- @END_COMPONENT: EconomicCalendar -->
+
+            <!-- @COMPONENT: TradingAccounts -->
+            <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                <div class="bg-panel-bg rounded-xl p-6 shadow-lg border border-border-color">
+                    <div class="flex items-center justify-between mb-6">
+                        <div class="flex items-center gap-3">
+                            <i class="fas fa-user-tie text-accent text-xl"></i>
+                            <h3 class="text-xl font-semibold">Trading Accounts</h3>
+                        </div>
+                        <button class="bg-accent hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200 flex items-center gap-2" data-event="click:refreshAccounts">
+                            <i class="fas fa-sync-alt"></i>
+                            Refresh
+                        </button>
+                    </div>
+
+                    <div class="space-y-4" data-mock="true">
+                        <!-- @MAP: accounts.map(account => ( -->
+                        <div class="bg-slate-700/50 rounded-lg p-4 border-l-4 border-emerald-500 hover:shadow-lg transition-all duration-200">
+                            <div class="flex items-center justify-between mb-3">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-3 h-3 bg-emerald-500 rounded-full"></div>
+                                    <h4 class="font-semibold" data-bind="account.name">Account #001</h4>
+                                </div>
+                                <span class="px-3 py-1 bg-emerald-500/20 text-emerald-500 text-sm font-medium rounded-full">Active</span>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4 text-sm">
+                                <div>
+                                    <p class="text-slate-400">Balance</p>
+                                    <p class="font-semibold text-white" data-bind="account.balance">$2,543.21</p>
+                                </div>
+                                <div>
+                                    <p class="text-slate-400">Equity</p>
+                                    <p class="font-semibold text-white" data-bind="account.equity">$2,567.89</p>
+                                </div>
+                                <div>
+                                    <p class="text-slate-400">P/L Today</p>
+                                    <p class="font-semibold text-emerald-500" data-bind="account.dailyPL">+$67.23</p>
+                                </div>
+                                <div>
+                                    <p class="text-slate-400">Trades</p>
+                                    <p class="font-semibold text-white" data-bind="account.tradesCount">4</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-slate-700/50 rounded-lg p-4 border-l-4 border-accent hover:shadow-lg transition-all duration-200">
+                            <div class="flex items-center justify-between mb-3">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-3 h-3 bg-emerald-500 rounded-full"></div>
+                                    <h4 class="font-semibold" data-bind="account.name">Account #002</h4>
+                                </div>
+                                <span class="px-3 py-1 bg-emerald-500/20 text-emerald-500 text-sm font-medium rounded-full">Active</span>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4 text-sm">
+                                <div>
+                                    <p class="text-slate-400">Balance</p>
+                                    <p class="font-semibold text-white" data-bind="account.balance">$1,987.45</p>
+                                </div>
+                                <div>
+                                    <p class="text-slate-400">Equity</p>
+                                    <p class="font-semibold text-white" data-bind="account.equity">$2,012.33</p>
+                                </div>
+                                <div>
+                                    <p class="text-slate-400">P/L Today</p>
+                                    <p class="font-semibold text-emerald-500" data-bind="account.dailyPL">+$89.12</p>
+                                </div>
+                                <div>
+                                    <p class="text-slate-400">Trades</p>
+                                    <p class="font-semibold text-white" data-bind="account.tradesCount">6</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-slate-700/50 rounded-lg p-4 border-l-4 border-warning hover:shadow-lg transition-all duration-200">
+                            <div class="flex items-center justify-between mb-3">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-3 h-3 bg-warning rounded-full animate-pulse"></div>
+                                    <h4 class="font-semibold" data-bind="account.name">Account #003</h4>
+                                </div>
+                                <span class="px-3 py-1 bg-warning/20 text-warning text-sm font-medium rounded-full">Scaling</span>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4 text-sm">
+                                <div>
+                                    <p class="text-slate-400">Balance</p>
+                                    <p class="font-semibold text-white" data-bind="account.balance">$3,234.56</p>
+                                </div>
+                                <div>
+                                    <p class="text-slate-400">Equity</p>
+                                    <p class="font-semibold text-white" data-bind="account.equity">$3,287.91</p>
+                                </div>
+                                <div>
+                                    <p class="text-slate-400">P/L Today</p>
+                                    <p class="font-semibold text-emerald-500" data-bind="account.dailyPL">+$168.32</p>
+                                </div>
+                                <div>
+                                    <p class="text-slate-400">Trades</p>
+                                    <p class="font-semibold text-white" data-bind="account.tradesCount">13</p>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- @END_MAP )) -->
+                    </div>
+                </div>
+
+                <!-- @COMPONENT: PerformanceChart -->
+                <div class="bg-panel-bg rounded-xl p-6 shadow-lg border border-border-color">
+                    <div class="flex items-center gap-3 mb-6">
+                        <i class="fas fa-chart-bar text-accent text-xl"></i>
+                        <h3 class="text-xl font-semibold">Performance Analytics</h3>
+                    </div>
+                    <div class="h-64 flex items-center justify-center bg-slate-700/30 rounded-lg">
+                        <canvas id="performanceChart" data-implementation="Implement Chart.js line chart showing equity curve over time"></canvas>
+                        <!-- @FUNCTIONALITY: Real-time equity curve chart showing portfolio performance across all accounts -->
+                        <div class="text-center text-slate-400">
+                            <i class="fas fa-chart-line text-4xl mb-4"></i>
+                            <p>Performance Chart Loading...</p>
+                            <p class="text-sm">Real-time equity tracking</p>
+                        </div>
+                    </div>
+                </div>
+                <!-- @END_COMPONENT: PerformanceChart -->
+            </div>
+            <!-- @END_COMPONENT: TradingAccounts -->
+
+            <!-- @COMPONENT: RiskManagement -->
+            <div class="bg-panel-bg rounded-xl p-6 shadow-lg border border-border-color">
+                <div class="flex items-center gap-3 mb-6">
+                    <i class="fas fa-shield-alt text-emerald-500 text-xl"></i>
+                    <h3 class="text-xl font-semibold">Risk Management Status</h3>
+                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-4 gap-4">
+                    <div class="bg-emerald-500/10 border border-emerald-500/30 rounded-lg p-4">
+                        <div class="flex items-center gap-3 mb-2">
+                            <i class="fas fa-check-circle text-emerald-500"></i>
+                            <h4 class="font-semibold">Daily Risk Limit</h4>
+                        </div>
+                        <p class="text-2xl font-bold text-emerald-500" data-bind="risk.dailyLimit">2.5%</p>
+                        <p class="text-slate-400 text-sm">Used today</p>
+                    </div>
+                    
+                    <div class="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4">
+                        <div class="flex items-center gap-3 mb-2">
+                            <i class="fas fa-stopwatch text-blue-500"></i>
+                            <h4 class="font-semibold">Max Drawdown</h4>
+                        </div>
+                        <p class="text-2xl font-bold text-white" data-bind="risk.maxDrawdown">-1.2%</p>
+                        <p class="text-slate-400 text-sm">Current period</p>
+                    </div>
+                    
+                    <div class="bg-warning/10 border border-warning/30 rounded-lg p-4">
+                        <div class="flex items-center gap-3 mb-2">
+                            <i class="fas fa-percentage text-warning"></i>
+                            <h4 class="font-semibold">Position Size</h4>
+                        </div>
+                        <p class="text-2xl font-bold text-white" data-bind="risk.positionSize">1.5%</p>
+                        <p class="text-slate-400 text-sm">Per trade</p>
+                    </div>
+                    
+                    <div class="bg-accent/10 border border-accent/30 rounded-lg p-4">
+                        <div class="flex items-center gap-3 mb-2">
+                            <i class="fas fa-calculator text-accent"></i>
+                            <h4 class="font-semibold">Risk Score</h4>
+                        </div>
+                        <p class="text-2xl font-bold text-emerald-500" data-bind="risk.riskScore">Low</p>
+                        <p class="text-slate-400 text-sm">Current status</p>
+                    </div>
+                </div>
+            </div>
+            <!-- @END_COMPONENT: RiskManagement -->
+
+            <!-- @COMPONENT: TradingActivity -->
+            <div class="bg-panel-bg rounded-xl p-6 shadow-lg border border-border-color">
+                <div class="flex items-center gap-3 mb-6">
+                    <i class="fas fa-clipboard-list text-accent text-xl"></i>
+                    <h3 class="text-xl font-semibold">Recent Trading Activity</h3>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead>
+                            <tr class="border-b border-border-color">
+                                <th class="text-left py-3 px-2 text-slate-400 font-medium">Time</th>
+                                <th class="text-left py-3 px-2 text-slate-400 font-medium">Account</th>
+                                <th class="text-left py-3 px-2 text-slate-400 font-medium">Symbol</th>
+                                <th class="text-left py-3 px-2 text-slate-400 font-medium">Type</th>
+                                <th class="text-left py-3 px-2 text-slate-400 font-medium">Size</th>
+                                <th class="text-left py-3 px-2 text-slate-400 font-medium">Price</th>
+                                <th class="text-left py-3 px-2 text-slate-400 font-medium">P/L</th>
+                                <th class="text-left py-3 px-2 text-slate-400 font-medium">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody data-mock="true">
+                            <!-- @MAP: trades.map(trade => ( -->
+                            <tr class="border-b border-slate-700/50 hover:bg-slate-700/30 transition-colors duration-200">
+                                <td class="py-3 px-2 text-sm" data-bind="trade.time">14:23:45</td>
+                                <td class="py-3 px-2 text-sm" data-bind="trade.account">#001</td>
+                                <td class="py-3 px-2 text-sm font-medium" data-bind="trade.symbol">EUR/USD</td>
+                                <td class="py-3 px-2">
+                                    <span class="px-2 py-1 bg-emerald-500/20 text-emerald-500 text-xs rounded-full" data-bind="trade.type">BUY</span>
+                                </td>
+                                <td class="py-3 px-2 text-sm" data-bind="trade.size">0.05</td>
+                                <td class="py-3 px-2 text-sm" data-bind="trade.price">1.0892</td>
+                                <td class="py-3 px-2 text-sm font-semibold text-emerald-500" data-bind="trade.profit">+$23.45</td>
+                                <td class="py-3 px-2">
+                                    <span class="px-2 py-1 bg-emerald-500/20 text-emerald-500 text-xs rounded-full">Closed</span>
+                                </td>
+                            </tr>
+                            
+                            <tr class="border-b border-slate-700/50 hover:bg-slate-700/30 transition-colors duration-200">
+                                <td class="py-3 px-2 text-sm" data-bind="trade.time">14:18:32</td>
+                                <td class="py-3 px-2 text-sm" data-bind="trade.account">#002</td>
+                                <td class="py-3 px-2 text-sm font-medium" data-bind="trade.symbol">GBP/USD</td>
+                                <td class="py-3 px-2">
+                                    <span class="px-2 py-1 bg-red-500/20 text-red-500 text-xs rounded-full" data-bind="trade.type">SELL</span>
+                                </td>
+                                <td class="py-3 px-2 text-sm" data-bind="trade.size">0.03</td>
+                                <td class="py-3 px-2 text-sm" data-bind="trade.price">1.2654</td>
+                                <td class="py-3 px-2 text-sm font-semibold text-emerald-500" data-bind="trade.profit">+$18.92</td>
+                                <td class="py-3 px-2">
+                                    <span class="px-2 py-1 bg-emerald-500/20 text-emerald-500 text-xs rounded-full">Closed</span>
+                                </td>
+                            </tr>
+                            
+                            <tr class="border-b border-slate-700/50 hover:bg-slate-700/30 transition-colors duration-200">
+                                <td class="py-3 px-2 text-sm" data-bind="trade.time">14:12:18</td>
+                                <td class="py-3 px-2 text-sm" data-bind="trade.account">#003</td>
+                                <td class="py-3 px-2 text-sm font-medium" data-bind="trade.symbol">USD/JPY</td>
+                                <td class="py-3 px-2">
+                                    <span class="px-2 py-1 bg-emerald-500/20 text-emerald-500 text-xs rounded-full" data-bind="trade.type">BUY</span>
+                                </td>
+                                <td class="py-3 px-2 text-sm" data-bind="trade.size">0.08</td>
+                                <td class="py-3 px-2 text-sm" data-bind="trade.price">149.82</td>
+                                <td class="py-3 px-2 text-sm font-semibold text-warning" data-bind="trade.profit">+$0.00</td>
+                                <td class="py-3 px-2">
+                                    <span class="px-2 py-1 bg-blue-500/20 text-blue-500 text-xs rounded-full animate-pulse">Open</span>
+                                </td>
+                            </tr>
+                            <!-- @END_MAP )) -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <!-- @END_COMPONENT: TradingActivity -->
+        </div>
+    </div>
+    <!-- @END_COMPONENT: MainDashboard -->
+
+    <!-- @COMPONENT: AddAccountModal -->
+    <div id="addAccountModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4" data-implementation="Modal should open/close with proper state management">
+        <div class="bg-panel-bg rounded-xl shadow-2xl w-full max-w-md border border-border-color">
+            <div class="p-6 border-b border-border-color">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-xl font-semibold flex items-center gap-3">
+                        <i class="fas fa-plus-circle text-accent"></i>
+                        Add Trading Account
+                    </h3>
+                    <button class="text-slate-400 hover:text-white transition-colors duration-200" data-event="click:closeModal">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="p-6">
+                <form class="space-y-4" data-implementation="Form should validate inputs and submit to API">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-300 mb-2">Account Name</label>
+                        <input type="text" placeholder="e.g., Main Trading Account" class="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:border-accent focus:ring-1 focus:ring-accent transition-colors duration-200">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-300 mb-2">Broker</label>
+                        <select class="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-white focus:border-accent focus:ring-1 focus:ring-accent transition-colors duration-200">
+                            <option value="">Select Broker</option>
+                            <option value="mt4">MetaTrader 4</option>
+                            <option value="mt5">MetaTrader 5</option>
+                            <option value="oanda">OANDA</option>
+                            <option value="ig">IG Markets</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-300 mb-2">Account Number</label>
+                        <input type="text" placeholder="Account number from broker" class="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:border-accent focus:ring-1 focus:ring-accent transition-colors duration-200">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-300 mb-2">Initial Balance</label>
+                        <input type="number" placeholder="1000" step="0.01" class="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:border-accent focus:ring-1 focus:ring-accent transition-colors duration-200">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-300 mb-2">Risk Per Trade (%)</label>
+                        <input type="number" placeholder="1.5" step="0.1" min="0.1" max="5" class="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:border-accent focus:ring-1 focus:ring-accent transition-colors duration-200">
+                    </div>
+                    <div class="flex gap-3 pt-4">
+                        <button type="button" class="flex-1 px-4 py-3 bg-slate-600 hover:bg-slate-500 text-white rounded-lg font-semibold transition-colors duration-200" data-event="click:closeModal">
+                            Cancel
+                        </button>
+                        <button type="submit" class="flex-1 px-4 py-3 bg-accent hover:bg-indigo-700 text-white rounded-lg font-semibold transition-colors duration-200">
+                            Add Account
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <!-- @END_COMPONENT: AddAccountModal -->
+
+    <!-- @COMPONENT: NotificationSystem -->
+    <div id="notificationContainer" class="fixed top-4 right-4 z-50 space-y-3" data-implementation="Show trading alerts and system notifications">
+        <!-- Notifications will be dynamically added here -->
+    </div>
+    <!-- @END_COMPONENT: NotificationSystem -->
+
+    <script>
+        // TODO: Implement business logic, API calls, and state management
+        (function() {
+            // Modal functionality
+            const addAccountModal = document.getElementById('addAccountModal');
+            const addAccountBtn = document.querySelector('[data-event="click:openAddAccountModal"]');
+            const addFirstAccountBtn = document.getElementById('add-first-account');
+            const closeModalBtns = document.querySelectorAll('[data-event="click:closeModal"]');
+
+            function openModal() {
+                addAccountModal.classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+            }
+
+            function closeModal() {
+                addAccountModal.classList.add('hidden');
+                document.body.style.overflow = 'auto';
+            }
+
+            addAccountBtn?.addEventListener('click', openModal);
+            addFirstAccountBtn?.addEventListener('click', openModal);
+            
+            closeModalBtns.forEach(btn => {
+                btn.addEventListener('click', closeModal);
+            });
+
+            // Close modal on backdrop click
+            addAccountModal.addEventListener('click', (e) => {
+                if (e.target === addAccountModal) {
+                    closeModal();
+                }
+            });
+
+            // Theme toggle functionality
+            const themeToggle = document.querySelector('[data-event="click:toggleTheme"]');
+            themeToggle?.addEventListener('click', () => {
+                document.documentElement.setAttribute('data-theme', 
+                    document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light'
+                );
+            });
+
+            // Emergency stop functionality
+            const emergencyStopBtn = document.querySelector('[data-event="click:emergencyStop"]');
+            emergencyStopBtn?.addEventListener('click', () => {
+                if (confirm('Are you sure you want to stop all trading activities?')) {
+                    // TODO: Implement emergency stop logic
+                    console.log('Emergency stop activated');
+                }
+            });
+
+            // Auto-refresh functionality simulation
+            function updateSystemTime() {
+                const uptimeElement = document.querySelector('[data-bind="dashboard.uptime"]');
+                if (uptimeElement) {
+                    const currentTime = uptimeElement.textContent.split(':');
+                    let hours = parseInt(currentTime[0]);
+                    let minutes = parseInt(currentTime[1]);
+                    let seconds = parseInt(currentTime[2]);
+                    
+                    seconds++;
+                    if (seconds >= 60) {
+                        seconds = 0;
+                        minutes++;
+                        if (minutes >= 60) {
+                            minutes = 0;
+                            hours++;
+                        }
+                    }
+                    
+                    uptimeElement.textContent = 
+                        `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                }
+            }
+
+            // Update every second
+            setInterval(updateSystemTime, 1000);
+
+            // Initialize Chart.js performance chart
+            const ctx = document.getElementById('performanceChart');
+            if (ctx && typeof Chart !== 'undefined') {
+                new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
+                        datasets: [{
+                            label: 'Portfolio Equity',
+                            data: [10000, 10250, 10180, 10420, 12847],
+                            borderColor: '#10b981',
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            borderWidth: 2,
+                            fill: true,
+                            tension: 0.4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                labels: {
+                                    color: '#f1f5f9'
+                                }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                ticks: {
+                                    color: '#94a3b8'
+                                },
+                                grid: {
+                                    color: '#334155'
+                                }
+                            },
+                            y: {
+                                ticks: {
+                                    color: '#94a3b8'
+                                },
+                                grid: {
+                                    color: '#334155'
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        })();
+    </script>
+</body>
+</html>

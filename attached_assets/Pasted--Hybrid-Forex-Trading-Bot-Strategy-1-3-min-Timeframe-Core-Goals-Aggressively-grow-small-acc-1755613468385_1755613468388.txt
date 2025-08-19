@@ -1,0 +1,102 @@
+⚡️ Hybrid Forex Trading Bot Strategy (1–3 min Timeframe)
+🎯 Core Goals:
+
+Aggressively grow small accounts (compounding faster than normal).
+
+Protect capital with dynamic risk management.
+
+Adapt to market conditions (trend, range, breakout).
+
+Scale position sizes automatically as balance grows.
+
+🧠 Strategy Components
+1. 📈 Trend-Following (Momentum Core)
+
+EMA 20 + EMA 50 crossover for short-term trend direction.
+
+ADX > 20 confirms strength (avoid weak trends).
+
+Entry: Buy when EMA20 > EMA50 + RSI > 55, Sell when EMA20 < EMA50 + RSI < 45.
+
+✅ Works in trending markets, captures momentum.
+
+2. 🔄 Mean Reversion (Pullback Safety Net)
+
+If RSI < 30 → oversold bounce (buy).
+
+If RSI > 70 → overbought drop (sell).
+
+Used only when ADX < 20 (weak/no trend).
+
+✅ Avoids whipsaw in sideways/ranging markets.
+
+3. 💥 Breakout Scalps
+
+Look for tight consolidation (ATR very low).
+
+Trade breakouts beyond recent high/low.
+
+Quick scalps (1:1 risk:reward).
+
+✅ Captures volatility bursts (common on 1–3min charts).
+
+4. 🛡️ Risk Management & Lot Sizing
+
+Dynamic lot size = (Balance × Risk%) ÷ (Stop Loss in pips × Pip Value)
+Example: Balance $1,000, Risk 2%, SL = 10 pips → $20 risk ÷ $1/pip → 0.20 lot.
+
+SL always placed behind key structure or ATR × multiplier.
+
+TP is at least 1.5x SL (reward > risk).
+
+5. 🚀 Aggressive Scaling Rule
+
+Start with Risk = 1% per trade for safety.
+
+When account grows by +10% → increase risk by +0.5% (up to max 5%).
+
+If account drops by -10% → cut risk in half.
+
+👉 This compounds growth faster when profitable, while shrinking exposure during drawdowns.
+
+6. 📊 Trade Filtering
+
+Skip high-spread pairs.
+
+Exclude Gold, Silver, Oil, Synthetic, Crypto (too volatile).
+
+Trade only major and liquid minors (EURUSD, GBPUSD, USDJPY, AUDUSD, etc.).
+
+7. 🧩 Capital Protection
+
+Max Daily Loss Rule: Stop trading after -5% equity drawdown in a day.
+
+Equity Lock: If balance grows +20%, lock in half as "protected capital" (bot never risks it).
+
+Kill Switch: If 3 consecutive stop-outs → pause trading for 1 hour.
+
+⚡ Example Trade Flow
+
+Bot checks EMA crossover + ADX → sees strong uptrend.
+
+RSI confirms → Enter Buy.
+
+Lot size auto-calculated at 2% risk of current balance.
+
+SL = 8 pips, TP = 12 pips.
+
+If equity +10% → next trade risks 2.5% instead.
+
+If equity -10% → drop back to 1% risk until recovery.
+
+🏆 Why This Combo Works
+
+Trend: Catches big moves.
+
+Reversion: Profits from sideways chop.
+
+Breakouts: Exploits volatility spikes.
+
+Scaling system: Compounds winners fast.
+
+Risk control: Prevents blowing up account

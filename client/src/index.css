@@ -1,0 +1,282 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Base colors */
+  --background: hsl(0 0% 100%);
+  --foreground: hsl(222.2 84% 4.9%);
+  --card: hsl(0 0% 100%);
+  --card-foreground: hsl(222.2 84% 4.9%);
+  --popover: hsl(0 0% 100%);
+  --popover-foreground: hsl(222.2 84% 4.9%);
+  --primary: hsl(221.2 83.2% 53.3%);
+  --primary-foreground: hsl(210 40% 98%);
+  --secondary: hsl(210 40% 96%);
+  --secondary-foreground: hsl(222.2 84% 4.9%);
+  --muted: hsl(210 40% 96%);
+  --muted-foreground: hsl(215.4 16.3% 46.9%);
+  --accent: hsl(210 40% 96%);
+  --accent-foreground: hsl(222.2 84% 4.9%);
+  --destructive: hsl(0 84.2% 60.2%);
+  --destructive-foreground: hsl(210 40% 98%);
+  --border: hsl(214.3 31.8% 91.4%);
+  --input: hsl(214.3 31.8% 91.4%);
+  --ring: hsl(221.2 83.2% 53.3%);
+  --chart-1: hsl(12 76% 61%);
+  --chart-2: hsl(173 58% 39%);
+  --chart-3: hsl(197 37% 24%);
+  --chart-4: hsl(43 74% 66%);
+  --chart-5: hsl(27 87% 67%);
+  --radius: 0.5rem;
+  
+  /* JRd-Trades custom colors */
+  --trading-dark: hsl(222 84% 4.9%);
+  --trading-panel: hsl(217 32% 17%);
+  --trading-accent: hsl(221 83% 53%);
+  --profit-green: hsl(142 76% 36%);
+  --loss-red: hsl(0 84% 60%);
+  --warning-amber: hsl(43 96% 56%);
+  
+  /* Font families */
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-mono: 'Fira Code', monospace;
+  --font-trading: 'Inter', system-ui, sans-serif;
+}
+
+.dark {
+  /* Dark theme colors */
+  --background: hsl(222 84% 4.9%);
+  --foreground: hsl(210 40% 98%);
+  --card: hsl(217 32% 17%);
+  --card-foreground: hsl(210 40% 98%);
+  --popover: hsl(222 84% 4.9%);
+  --popover-foreground: hsl(210 40% 98%);
+  --primary: hsl(217 91% 60%);
+  --primary-foreground: hsl(222 84% 4.9%);
+  --secondary: hsl(217 32% 17%);
+  --secondary-foreground: hsl(210 40% 98%);
+  --muted: hsl(217 32% 17%);
+  --muted-foreground: hsl(215 20% 65%);
+  --accent: hsl(217 32% 17%);
+  --accent-foreground: hsl(210 40% 98%);
+  --destructive: hsl(0 62% 50%);
+  --destructive-foreground: hsl(210 40% 98%);
+  --border: hsl(217 32% 17%);
+  --input: hsl(217 32% 17%);
+  --ring: hsl(224 71% 4%);
+  --chart-1: hsl(220 70% 50%);
+  --chart-2: hsl(160 60% 45%);
+  --chart-3: hsl(30 80% 55%);
+  --chart-4: hsl(280 65% 60%);
+  --chart-5: hsl(340 75% 55%);
+  
+  /* JRd-Trades dark theme colors */
+  --trading-dark: hsl(222 84% 4.9%);
+  --trading-panel: hsl(217 32% 17%);
+  --trading-accent: hsl(217 91% 60%);
+  --profit-green: hsl(142 76% 36%);
+  --loss-red: hsl(0 84% 60%);
+  --warning-amber: hsl(43 96% 56%);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+  
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+@layer components {
+  /* JRd-Trades specific component styles */
+  .trading-gradient {
+    background: linear-gradient(135deg, var(--trading-accent), var(--profit-green));
+  }
+  
+  .trading-card {
+    @apply bg-trading-panel border-slate-700 rounded-xl;
+  }
+  
+  .trading-button-primary {
+    @apply bg-trading-accent hover:bg-blue-600 text-white font-medium;
+  }
+  
+  .trading-button-danger {
+    @apply bg-loss-red hover:bg-red-600 text-white font-medium;
+  }
+  
+  .trading-button-warning {
+    @apply bg-warning-amber hover:bg-yellow-600 text-white font-medium;
+  }
+  
+  .trading-text-profit {
+    @apply text-profit-green;
+  }
+  
+  .trading-text-loss {
+    @apply text-loss-red;
+  }
+  
+  .trading-text-warning {
+    @apply text-warning-amber;
+  }
+  
+  .trading-bg-profit {
+    @apply bg-profit-green/10 text-profit-green;
+  }
+  
+  .trading-bg-loss {
+    @apply bg-loss-red/10 text-loss-red;
+  }
+  
+  .trading-bg-warning {
+    @apply bg-warning-amber/10 text-warning-amber;
+  }
+}
+
+@layer utilities {
+  .font-trading {
+    font-family: var(--font-trading);
+  }
+  
+  .bg-trading-dark {
+    background-color: var(--trading-dark);
+  }
+  
+  .bg-trading-panel {
+    background-color: var(--trading-panel);
+  }
+  
+  .bg-trading-accent {
+    background-color: var(--trading-accent);
+  }
+  
+  .text-trading-accent {
+    color: var(--trading-accent);
+  }
+  
+  .bg-profit-green {
+    background-color: var(--profit-green);
+  }
+  
+  .text-profit-green {
+    color: var(--profit-green);
+  }
+  
+  .bg-loss-red {
+    background-color: var(--loss-red);
+  }
+  
+  .text-loss-red {
+    color: var(--loss-red);
+  }
+  
+  .bg-warning-amber {
+    background-color: var(--warning-amber);
+  }
+  
+  .text-warning-amber {
+    color: var(--warning-amber);
+  }
+  
+  .border-trading-accent {
+    border-color: var(--trading-accent);
+  }
+  
+  .border-profit-green {
+    border-color: var(--profit-green);
+  }
+  
+  .border-loss-red {
+    border-color: var(--loss-red);
+  }
+  
+  .border-warning-amber {
+    border-color: var(--warning-amber);
+  }
+}
+
+/* Custom scrollbar for dark theme */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: hsl(217 32% 17%);
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(215 20% 65%);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(210 40% 80%);
+}
+
+/* Loading animations */
+@keyframes pulse-glow {
+  0%, 100% {
+    opacity: 1;
+    box-shadow: 0 0 5px var(--profit-green);
+  }
+  50% {
+    opacity: 0.7;
+    box-shadow: 0 0 20px var(--profit-green);
+  }
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+/* Chart container styles */
+.chart-container {
+  position: relative;
+  height: 400px;
+  width: 100%;
+}
+
+.chart-container canvas {
+  max-height: 100% !important;
+}
+
+/* Custom progress bar styles */
+.progress-bar {
+  background: linear-gradient(90deg, var(--profit-green), var(--warning-amber), var(--loss-red));
+  border-radius: 9999px;
+}
+
+/* Notification styles */
+.notification-enter {
+  opacity: 0;
+  transform: translateX(100%);
+}
+
+.notification-enter-active {
+  opacity: 1;
+  transform: translateX(0);
+  transition: opacity 300ms, transform 300ms;
+}
+
+.notification-exit {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.notification-exit-active {
+  opacity: 0;
+  transform: translateX(100%);
+  transition: opacity 300ms, transform 300ms;
+}
