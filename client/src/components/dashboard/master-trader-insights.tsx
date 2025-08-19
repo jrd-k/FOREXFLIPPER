@@ -4,8 +4,14 @@ import { Star } from "lucide-react";
 import type { MasterTraderSignal } from "@shared/schema";
 
 export default function MasterTraderInsights() {
-  const { data: signals, isLoading } = useQuery({
+  const { data: signals, isLoading, isError } = useQuery<MasterTraderSignal[]>({
     queryKey: ["/api/master-trader-signals"],
+    queryFn: async () => {
+      const res = await fetch("/api/master-trader-signals");
+      if (!res.ok) throw new Error("Failed to fetch signals");
+      return res.json();
+    },
+    refetchInterval: 5000, // auto-refresh every 5 seconds (optional)
   });
 
   if (isLoading) {
@@ -32,6 +38,38 @@ export default function MasterTraderInsights() {
     );
   }
 
+  if (isError) {
+    return (
+      <Card className="bg-trading-panel border-slate-700">
+        <CardHeader className="border-b border-slate-700">
+          <CardTitle className="text-lg font-semibold text-white flex items-center">
+            <Star className="text-yellow-400 mr-2" size={20} />
+            Master Trader Insights
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-6 text-center text-red-400">
+          Failed to load signals. Please try again later.
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (!signals || signals.length === 0) {
+    return (
+      <Card className="bg-trading-panel border-slate-700">
+        <CardHeader className="border-b border-slate-700">
+          <CardTitle className="text-lg font-semibold text-white flex items-center">
+            <Star className="text-yellow-400 mr-2" size={20} />
+            Master Trader Insights
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-6 text-slate-400 text-center">
+          No signals available right now. Check back soon!
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card className="bg-trading-panel border-slate-700">
       <CardHeader className="border-b border-slate-700">
@@ -41,51 +79,51 @@ export default function MasterTraderInsights() {
         </CardTitle>
       </CardHeader>
       <CardContent className="p-6 space-y-4">
-        {signals?.map((signal: MasterTraderSignal) => (
+        {signals.map((signal) => (
           <div key={signal.id} className="border border-slate-600 rounded-lg p-4">
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm font-medium text-white">
                 {signal.symbol} {signal.direction.toUpperCase()}
               </span>
-              <span 
+              <span
                 className={`text-xs px-2 py-1 rounded-full ${
-                  signal.pips > 0 
-                    ? 'bg-profit-green/10 text-profit-green' 
+                  signal.pips > 0
+                    ? "bg-profit-green/10 text-profit-green"
                     : signal.pips < 0
-                    ? 'bg-loss-red/10 text-loss-red'
-                    : 'bg-blue-500/10 text-blue-500'
+                    ? "bg-loss-red/10 text-loss-red"
+                    : "bg-blue-500/10 text-blue-500"
                 }`}
                 data-testid={`signal-pips-${signal.symbol}`}
               >
-                {signal.pips > 0 ? `+${signal.pips}` : signal.pips} 
-                {signal.status === 'watching' ? ' Watching' : ' pips'}
+                {signal.pips > 0 ? `+${signal.pips}` : signal.pips}
+                {signal.status === "watching" ? " Watching" : " pips"}
               </span>
             </div>
             <p className="text-xs text-slate-400 mb-2">{signal.description}</p>
             <div className="flex items-center justify-between text-xs">
               <span className="text-slate-400">
-                Confidence: 
-                <span 
+                Confidence:
+                <span
                   className={`ml-1 ${
-                    signal.confidence >= 80 
-                      ? 'text-profit-green' 
-                      : signal.confidence >= 60 
-                      ? 'text-warning-amber' 
-                      : 'text-blue-500'
+                    signal.confidence >= 80
+                      ? "text-profit-green"
+                      : signal.confidence >= 60
+                      ? "text-warning-amber"
+                      : "text-blue-500"
                   }`}
                 >
                   {signal.confidence}%
                 </span>
               </span>
               <span className="text-slate-400">
-                Risk: 
-                <span 
+                Risk:
+                <span
                   className={`ml-1 ${
-                    signal.riskLevel === 'low' 
-                      ? 'text-profit-green' 
-                      : signal.riskLevel === 'medium' 
-                      ? 'text-warning-amber' 
-                      : 'text-loss-red'
+                    signal.riskLevel === "low"
+                      ? "text-profit-green"
+                      : signal.riskLevel === "medium"
+                      ? "text-warning-amber"
+                      : "text-loss-red"
                   }`}
                 >
                   {signal.riskLevel.charAt(0).toUpperCase() + signal.riskLevel.slice(1)}
